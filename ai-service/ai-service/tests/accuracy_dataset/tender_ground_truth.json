@@ -1,0 +1,60 @@
+{
+  "dataset_type": "SYNTHETIC_EVALUATION_DATA",
+  "tender_filename": "accuracy_tender.pdf",
+  "expected_requirements": [
+    {
+      "requirement_id": "REQ-001",
+      "category": "FINANCIAL",
+      "description": "Average Annual Financial Turnover of at least INR 5 Crore during the last 3 fiscal years",
+      "required_value": 50000000.0,
+      "unit": "INR",
+      "period": "3 years",
+      "is_mandatory": true
+    },
+    {
+      "requirement_id": "REQ-002",
+      "category": "CERTIFICATION",
+      "description": "Valid ISO 9001:2015 quality certification",
+      "required_value": "ISO 9001:2015",
+      "unit": null,
+      "period": null,
+      "is_mandatory": true
+    },
+    {
+      "requirement_id": "REQ-003",
+      "category": "SECURITY",
+      "description": "Valid CERT-In cybersecurity audit certificate",
+      "required_value": "CERT-In",
+      "unit": null,
+      "period": null,
+      "is_mandatory": true
+    },
+    {
+      "requirement_id": "REQ-004",
+      "category": "SUBMISSION",
+      "description": "Submitted in searchable Proposal PDF format",
+      "required_value": "Proposal PDF format",
+      "unit": null,
+      "period": null,
+      "is_mandatory": true
+    },
+    {
+      "requirement_id": "REQ-005",
+      "category": "FINANCIAL",
+      "description": "Earnest Money Deposit (EMD) of INR 1,00,000",
+      "required_value": 100000.0,
+      "unit": "INR",
+      "period": null,
+      "is_mandatory": true
+    },
+    {
+      "requirement_id": "REQ-006",
+      "category": "SUBMISSION",
+      "description": "Proposal validity period of 180 days",
+      "required_value": 180.0,
+      "unit": "days",
+      "period": "180 days",
+      "is_mandatory": true
+    }
+  ]
+}

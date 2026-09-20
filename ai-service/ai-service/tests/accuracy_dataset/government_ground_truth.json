@@ -1,0 +1,25 @@
+{
+  "dataset_type": "SYNTHETIC_EVALUATION_DATA",
+  "document_name": "accuracy_government.pdf",
+  "total_pages": 4,
+  "queries": [
+    {
+      "query": "minimum bidder turnover requirement",
+      "expected_page": 2,
+      "expected_section": "2. Eligibility & Financial Qualification Criteria",
+      "expected_numeric_value": "5 Crore"
+    },
+    {
+      "query": "bid security EMD exemption for MSEs",
+      "expected_page": 3,
+      "expected_section": "3. Bid Security & Earnest Money Deposit (EMD) Guidelines",
+      "expected_numeric_value": "2% to 5%"
+    },
+    {
+      "query": "electronic submission CPP portal and bid validity",
+      "expected_page": 4,
+      "expected_section": "4. Submission & Evaluation Procedures",
+      "expected_numeric_value": "180 days"
+    }
+  ]
+}

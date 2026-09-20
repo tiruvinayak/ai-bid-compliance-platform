@@ -1,0 +1,19 @@
+# MySQL profile - activate with: --spring.profiles.active=mysql
+# or set SPRING_PROFILES_ACTIVE=mysql
+spring:
+  datasource:
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/gemdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  h2:
+    console:
+      enabled: false

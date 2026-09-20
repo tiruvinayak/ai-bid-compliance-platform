@@ -1,0 +1,49 @@
+{
+  "dataset_type": "SYNTHETIC_EVALUATION_DATA",
+  "bidder_filename": "accuracy_bidder.pdf",
+  "company_name": "ABC TECHNOLOGIES PRIVATE LIMITED",
+  "expected_facts": [
+    {
+      "fact_type": "FINANCIAL",
+      "fact_key": "AVERAGE_ANNUAL_TURNOVER",
+      "fact_value": 70000000.0,
+      "unit": "INR",
+      "detected_page": 1
+    },
+    {
+      "fact_type": "FINANCIAL",
+      "fact_key": "NET_WORTH",
+      "fact_value": 25000000.0,
+      "unit": "INR",
+      "detected_page": 1
+    },
+    {
+      "fact_type": "CERTIFICATION",
+      "fact_key": "ISO_CERTIFICATION",
+      "fact_value": "ISO 9001:2015",
+      "unit": null,
+      "detected_page": 1
+    },
+    {
+      "fact_type": "SECURITY",
+      "fact_key": "CYBERSECURITY_AUDIT",
+      "fact_value": "CERT-In",
+      "unit": null,
+      "detected_page": 1
+    },
+    {
+      "fact_type": "IDENTIFICATION",
+      "fact_key": "GSTIN",
+      "fact_value": "27AAAAA0000A1Z5",
+      "unit": null,
+      "detected_page": 1
+    },
+    {
+      "fact_type": "EXPERIENCE",
+      "fact_key": "DOMAIN_EXPERIENCE",
+      "fact_value": 8.0,
+      "unit": "years",
+      "detected_page": 1
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+credentials/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+build/
+.vite/
+
+# Java / Spring
+target/
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Runtime/generated files
+uploads/
+generated/
+tmp/
+temp/
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Output directories
+output/
+!output/.gitkeep
+
+# AI service
+ai-service/ai-service/.venv/
+ai-service/ai-service/.pytest_cache/
+ai-service/ai-service/.pytest_cache/
+ai-service/ai-service/output/
+ai-service/ai-service/input/
+
+# Frontend
+Frontend/Frontend/node_modules/
+Frontend/Frontend/dist/
+Frontend/Frontend/.env
+Frontend/Frontend/.env.*
+
+# Backend
+Backend/target/
+Backend/uploads/
+Backend/*.log
+Backend/app.err.log
+Backend/app.log
+Backend/data/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Java / Spring
+target/
+*.class
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+build/
+.vite/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Runtime/generated files
+uploads/
+generated/
+tmp/
+temp/
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Output directories
+output/
+!output/.gitkeep
