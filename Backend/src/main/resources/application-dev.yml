@@ -10,7 +10,7 @@ spring:
     open-in-view: false
   h2:
     console:
-      enabled: false
+      enabled: true
 
 # Temporary development persistence only. This profile is intentionally
 # isolated and replaceable; it is not the production procurement datastore.

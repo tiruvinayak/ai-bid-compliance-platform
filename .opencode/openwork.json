@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "SIH",
+    "createdAt": 1788012674833,
+    "preset": "starter"
+  },
+  "authorizedRoots": [
+    "D:\\SIH"
+  ],
+  "reload": null
+}
