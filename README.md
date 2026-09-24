@@ -1,405 +1,978 @@
-# AI-Assisted Procurement Bid Compliance Verification Platform (SIH26100)
+# AI-Assisted Procurement Bid Compliance Verification Platform
 
-An AI-assisted platform for verifying bidder compliance against tender requirements in government procurement. The system processes tender documents and bidder submissions, extracts requirements and facts using local LLMs, and provides deterministic compliance verification with full evidence traceability.
+> **SIH26100 — Smart India Hackathon**
 
-## Overview
+An AI-assisted procurement platform designed to help government procurement officers and bidders analyze tender requirements, verify bid documents, identify compliance issues, assess risk, detect conflicts, and compare multiple bids using an evidence-driven workflow.
 
-This platform assists procurement officers in analyzing tender requirements, bidder documents, compliance, evidence, risks, conflicts, and audit information. The system uses local LLMs via Ollama for document intelligence while keeping all data on-premise.
+The platform combines **document intelligence, deterministic compliance verification, local AI/RAG, preliminary integrity checks, risk analysis, conflict detection, evidence traceability, and multi-bidder comparison** into a unified procurement workflow.
 
-**Important**: This platform provides AI-assisted decision support and does not replace authorized procurement officers or applicable procurement rules. Final procurement decisions remain with authorized human officers.
+---
 
-## Key Features
+## 📌 Project Overview
 
-- **Tender Document Processing**: PDF text extraction with page-level traceability
-- **AI Requirement Extraction**: Structured requirement extraction from tender documents
-- **Bidder Document Intelligence**: Financial, certification, experience, and registration fact extraction
-- **Evidence Extraction**: Page-level evidence snippets with confidence scores
-- **Requirement-to-Evidence Traceability**: Full traceability from requirement to evidence to document page
-- **Deterministic Compliance Verification**: Rule-based PASS/FAIL/MISSING/REVIEW/CONFLICT decisions
-- **Risk Analysis**: Financial, documentation, experience, registration, and legal risk categories
-- **Conflict Detection**: Cross-document discrepancy detection with evidence
-- **Government Knowledge RAG**: Grounded Q&A on procurement regulations (GFR, CVC, etc.)
-- **Officer Review Workflow**: Human-in-the-loop decision recording with audit trail
-- **Audit Trail**: Immutable audit log of all actions
-- **Report Generation**: HTML/PDF compliance reports
-- **JWT Authentication**: Role-based access (Bidder / Government Officer)
-- **Local AI Only**: All AI inference runs locally via Ollama (no cloud API keys required)
+Government procurement processes involve large volumes of tender documents, bidder submissions, certificates, financial records, technical documents, and eligibility requirements.
 
-## System Architecture
+Manual verification can require officers to:
 
+* Read lengthy tender documents
+* Extract individual requirements
+* Examine multiple bidder documents
+* Verify dates and document validity
+* Cross-check information across pages
+* Determine whether evidence satisfies requirements
+* Identify missing or contradictory information
+* Compare multiple bidders
+* Document the reasoning behind verification decisions
+
+This project aims to assist that workflow through an integrated AI and rule-based verification platform.
+
+The system does **not replace the authorized procurement officer**. Instead, it provides structured evidence, automated checks, explanations, and decision-support information.
+
+---
+
+# 🎯 Objectives
+
+The platform is designed to:
+
+* Extract structured requirements from tender documents
+* Process bidder documents automatically
+* Extract relevant facts from submitted documents
+* Perform preliminary document-integrity checks
+* Verify bidder compliance against tender requirements
+* Detect missing and conflicting information
+* Assess procurement risk
+* Maintain evidence traceability
+* Provide a tender-aware AI assistant for bidders
+* Compare multiple bids belonging to the same tender
+* Maintain audit records of important procurement actions
+* Provide government officers with structured decision-support information
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                         ┌─────────────────────────┐
+                         │    Central Government   │
+                         └────────────┬────────────┘
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                Railways           Finance          Defence
+                    │
+              Petroleum & Energy
+                    │
+              Departments
+                    │
+                 Tenders
+                    │
+             Procurement Officers
+                    │
+        ┌───────────┴───────────┐
+        │                       │
+     Bidders              Bid Documents
+                                │
+                                ▼
+                    ┌─────────────────────┐
+                    │ PDF Document Engine  │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │ Requirement         │
+                    │ Extraction           │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │ Bidder Fact         │
+                    │ Extraction           │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+             ┌─────────────────────────────────┐
+             │ Preliminary Integrity — Stage 0 │
+             ├─────────────────────────────────┤
+             │ • Document validity             │
+             │ • Required evidence             │
+             │ • Expiry validation             │
+             │ • Cross-page consistency        │
+             │ • Required fields               │
+             └───────────────┬─────────────────┘
+                             │
+                             ▼
+             ┌─────────────────────────────────┐
+             │ Deep Compliance Verification    │
+             └───────────────┬─────────────────┘
+                             │
+               ┌─────────────┼─────────────┐
+               ▼             ▼             ▼
+            Evidence        Risk        Conflicts
+               │             │             │
+               └─────────────┼─────────────┘
+                             ▼
+                 ┌────────────────────────┐
+                 │ Multi-Bidder Comparison│
+                 └────────────┬───────────┘
+                              │
+                              ▼
+                    Government Officer
+                         Decision
 ```
-React Frontend (Vite + React 19 + Tailwind CSS)
-       |
-       v
-Spring Boot Backend (Java 21, Spring Boot 3.4.5)
-       |
-       +------ PostgreSQL (via Spring Data JPA)
-       |
-       v
-FastAPI AI Service (Python 3.9+, FastAPI)
-       |
-       v
-Ollama (Local LLM Server)
-       |
-       +------ qwen2.5:3b (LLM for extraction/analysis)
-       |
-       +------ nomic-embed-text (Embeddings for RAG)
+
+---
+
+# 🔄 End-to-End Workflow
+
+```text
+Tender Upload
+      ↓
+PDF Processing
+      ↓
+Requirement Extraction
+      ↓
+Bidder Document Upload
+      ↓
+Bidder Fact Extraction
+      ↓
+Preliminary Integrity Verification
+      ↓
+Deep Compliance Verification
+      ↓
+Risk Assessment
+      ↓
+Conflict Detection
+      ↓
+Evidence Traceability
+      ↓
+Officer Review
+      ↓
+Multi-Bidder Comparison
+      ↓
+Audit & Report Generation
 ```
 
-## Technology Stack
+---
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 19, Vite 8, Tailwind CSS 4, React Router 7, Lucide Icons |
-| Backend | Spring Boot 3.4.5, Java 21, Spring Data JPA, Spring Security, JWT (JJWT 0.12.6) |
-| Database | PostgreSQL 18 (production), H2 (development) |
-| AI Service | FastAPI 0.115, Python 3.9+, Pydantic 2 |
-| AI Models | Ollama: qwen2.5:3b (LLM), nomic-embed-text (embeddings) |
-| Document Processing | Apache PDFBox 3.0.3, Apache POI 5.3.0 |
-| AI/ML | Custom deterministic compliance engine, RAG with nomic-embed-text |
-| Build Tools | Maven 3.9.9, Vite 8, npm 10.8.2 |
+# 🚀 Implemented Phases
 
-## AI Pipeline
+## Phase 1 — Government Hierarchy
 
-```
-Tender PDF
-    ↓
-Document Processing (PDFBox/POI)
-    ↓
-Requirement Extraction (Ollama qwen2.5:3b)
-    ↓
-Structured Requirements
-    ↓
-Bidder Documents
-    ↓
-Fact Extraction (Ollama qwen2.5:3b)
-    ↓
-Structured Facts
-    ↓
-Deterministic Compliance Engine
-    ↓
-PASS / FAIL / MISSING / REVIEW / CONFLICT
-    ↓
-Evidence Mapping
-    ↓
-Risk / Conflict Analysis
+**Status: ✅ Complete**
+
+The platform supports a government procurement hierarchy:
+
+```text
+Central Government
+      ↓
+Sector
+      ↓
+Department
+      ↓
+Tender
+      ↓
+Procurement Officer
+      ↓
+Bid
 ```
 
-## Evidence Traceability
+Supported demonstration sectors include:
 
-The system maintains full traceability:
+* Railways
+* Finance
+* Defence
+* Petroleum & Energy
 
+The hierarchy is integrated with role-based access control.
+
+### Verified
+
+```text
+Hierarchy E2E: 13/13 PASS
 ```
+
+---
+
+# Phase 2 — Preliminary Compliance & Document Integrity
+
+**Status: ✅ Complete**
+
+A deterministic preliminary verification layer operates before deep compliance analysis.
+
+### Checks
+
+| Check                  | Description                                                    |
+| ---------------------- | -------------------------------------------------------------- |
+| Document Validity      | Verifies successful document processing and technical validity |
+| Required Evidence      | Checks whether required evidence is available                  |
+| Expiry Validation      | Detects expired or ambiguous validity dates                    |
+| Cross-Page Consistency | Detects contradictory values across document pages             |
+| Required Fields        | Identifies missing information required for verification       |
+
+### Result States
+
+```text
+PASS
+REVIEW
+FAIL
+MISSING
+CONFLICT
+```
+
+The results are stored in PostgreSQL and displayed in the compliance dashboard.
+
+---
+
+# Phase 3 — Bidder AI Assistant
+
+**Status: ✅ Complete**
+
+The platform includes a **tender-aware AI assistant** for bidders.
+
+The assistant uses local AI and retrieves information from the selected tender and bidder context.
+
+### Example Questions
+
+```text
+What documents are required?
+
+Which documents am I missing?
+
+Why is my bid under review?
+
+What are the eligibility requirements?
+
+Is my certificate valid?
+
+Why did this requirement fail?
+
+What should I correct before submission?
+```
+
+### AI Architecture
+
+```text
+React
+  ↓
+Spring Boot
+  ↓
+FastAPI
+  ↓
+Local RAG / Retrieval
+  ↓
+Ollama
+  ├── qwen2.5:3b
+  └── nomic-embed-text
+```
+
+The assistant provides citations to supporting requirements, documents, evidence, and pages where available.
+
+### Verified
+
+```text
+Phase 3 Assistant E2E: 3/3 PASS
+```
+
+The assistant has been tested using the real local Ollama model rather than a mock LLM provider.
+
+---
+
+# Phase 4 — Multi-Bidder Comparison & Decision Support
+
+**Status: ✅ Complete**
+
+Government officers can compare multiple bids belonging to the same tender.
+
+### Comparison Features
+
+* Bidder summary
+* Preliminary integrity status
+* Requirement-by-requirement comparison
+* Compliance status
+* Coverage percentage
+* Risk summary
+* Conflict information
+* Document coverage
+* Evidence references
+* Bid detail navigation
+* Filtering
+* Neutral sorting
+
+Example:
+
+```text
+                    Bidder A     Bidder B     Bidder C
+--------------------------------------------------------
+Preliminary           PASS         REVIEW       PASS
+Requirements          8/9          6/9          8/9
+Review                  1            2            1
+Failed                  0            1            0
+Missing                 0            1            0
+Conflicts               0            2            0
+```
+
+The system intentionally does **not** automatically declare a winner or procurement award decision.
+
+The authorized government officer remains responsible for the final decision.
+
+### Performance
+
+Comparison is deterministic database aggregation and does not require an LLM.
+
+Observed response time:
+
+```text
+~10–45 ms
+```
+
+### Verified
+
+```text
+Phase 4 E2E: 10/10 PASS
+```
+
+---
+
+# 🤖 AI & Document Intelligence
+
+The platform uses a hybrid architecture combining:
+
+### Deterministic Processing
+
+Used for:
+
+* Date comparisons
+* Required-field validation
+* Document metadata
+* Compliance rules
+* Preliminary verification
+* Risk rules
+* Conflict detection
+* Bid comparison
+
+### Local AI
+
+Used for:
+
+* Requirement extraction
+* Document understanding
+* Semantic retrieval
+* Tender-aware bidder assistance
+* Evidence-grounded explanations
+
+This separation helps keep critical verification decisions deterministic and traceable.
+
+---
+
+# 🔍 Evidence Traceability
+
+A core design principle is that verification results should be explainable.
+
+The platform maintains a chain such as:
+
+```text
 Requirement
-    ↓
-Detected Fact
-    ↓
+     ↓
+Compliance Result
+     ↓
+Fact
+     ↓
 Evidence
-    ↓
-Bidder Document
-    ↓
+     ↓
+Document
+     ↓
 Page
-    ↓
-Compliance Decision
 ```
 
-Every compliance decision traces back to specific document pages and extracted text snippets.
+For example:
 
-## Roles
-
-### Bidder
-- Register/login with email/password
-- Browse available tenders
-- Apply to tenders
-- Upload supporting documents (PDF, DOCX, XLSX, etc.)
-- Track document processing status
-- Review compliance results before submission
-- Submit bid for evaluation
-
-### Government Officer
-- Login with government officer role
-- Dashboard with bid queue
-- Open bid details with all documents
-- View requirements with extracted facts
-- Inspect compliance results (PASS/FAIL/REVIEW/MISSING/CONFLICT)
-- View evidence snippets with document/page references
-- Open PDF evidence viewer with page-level navigation
-- Review risk analysis and conflicts
-- Conduct officer review with decision (APPROVE/REJECT/REQUEST_CLARIFICATION/UNDER_REVIEW)
-- View audit trail
-- Generate compliance reports (HTML/PDF)
-- Query Government Knowledge RAG for procurement guidance
-
-## Local AI Setup
-
-The platform uses **Ollama** for local LLM inference. No cloud API keys required.
-
-### Required Models
-```bash
-# Pull required models
-ollama pull qwen2.5:3b      # LLM for extraction/analysis
-ollama pull nomic-embed-text  # Embeddings for RAG
+```text
+Requirement R-04
+      ↓
+PASS
+      ↓
+Turnover = ₹8 crore
+      ↓
+Financial Statement
+      ↓
+Page 4
 ```
 
-### Ollama Configuration
-```env
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=qwen2.5:3b
-OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+The system avoids inventing page numbers or evidence when source information is unavailable.
+
+---
+
+# ⚠️ Risk & Conflict Analysis
+
+The platform contains an existing risk-analysis layer and conflict-detection engine.
+
+### Risk
+
+Risk information can include:
+
+* High-risk factors
+* Medium-risk factors
+* Low-risk factors
+* Risk category summaries
+* Evidence supporting risk findings
+
+### Conflicts
+
+The system can identify conflicting information such as:
+
+```text
+Page 2:
+Turnover = ₹8 crore
+
+Page 7:
+Turnover = ₹3 crore
 ```
 
-## Project Structure
+Conflict information can include:
 
+* Conflict type
+* Affected field
+* Source documents
+* Supporting evidence
+
+---
+
+# 🏛️ Role-Based Access Control
+
+The platform supports role-based access.
+
+Conceptually:
+
+```text
+CENTRAL_ADMIN
+      │
+      ├── All authorized sectors
+      │
+      └── Government administration
+
+SECTOR_USER
+      │
+      └── Assigned sector
+
+GOVERNMENT OFFICER
+      │
+      └── Assigned department/tender scope
+
+BIDDER
+      │
+      └── Own bids/documents
 ```
+
+Access is enforced on the backend and frontend.
+
+Hierarchy restrictions are applied to government users.
+
+Bidder access is isolated from other bidders' private information.
+
+---
+
+# 🧑‍💼 Government Officer Workflow
+
+```text
+Login
+  ↓
+Government Dashboard
+  ↓
+Sector
+  ↓
+Department
+  ↓
+Tender
+  ↓
+Bid
+  ↓
+Preliminary Integrity
+  ↓
+Compliance
+  ↓
+Risk
+  ↓
+Conflicts
+  ↓
+Evidence
+  ↓
+Compare Bids
+  ↓
+Audit / Report
+```
+
+---
+
+# 👤 Bidder Workflow
+
+```text
+Bidder Login
+     ↓
+My Bids
+     ↓
+Select Tender
+     ↓
+Upload Documents
+     ↓
+Document Processing
+     ↓
+Compliance Analysis
+     ↓
+Preliminary Verification
+     ↓
+AI Assistant
+     ↓
+Review Missing / Problematic Documents
+     ↓
+Correct Submission
+```
+
+---
+
+# 🛠️ Technology Stack
+
+## Frontend
+
+* React 19
+* Vite
+* TypeScript
+* Tailwind CSS
+* React Router
+* Axios
+
+## Backend
+
+* Java 21
+* Spring Boot
+* Spring Security
+* JWT
+* Spring Data JPA
+* Hibernate
+* Maven
+
+## Database
+
+* PostgreSQL 18.x
+
+## AI Service
+
+* Python
+* FastAPI
+* Uvicorn
+* Ollama
+
+## Local AI Models
+
+```text
+qwen2.5:3b
+nomic-embed-text
+```
+
+## Testing
+
+* JUnit / Spring Boot tests
+* Pytest
+* Playwright
+* Frontend build validation
+
+---
+
+# 🏗️ Repository Structure
+
+```text
 SIH2/
-├── Backend/                 # Spring Boot backend
-│   ├── src/main/java/       # Spring Boot application
-│   ├── src/main/resources/  # Configuration (application.yml, etc.)
-│   ├── pom.xml              # Maven build file
-│   └── target/              # Build output (ignored)
+│
+├── Backend/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   └── resources/
+│   │   └── test/
+│   └── pom.xml
+│
 ├── Frontend/
-│   └── Frontend/            # React + Vite frontend
-│       ├── src/             # React source
-│       ├── public/          # Static assets
+│   └── Frontend/
+│       ├── src/
+│       ├── tests/
 │       ├── package.json
-│       └── vite.config.ts
+│       └── vite.config.*
+│
 ├── ai-service/
-│   └── ai-service/          # FastAPI AI service
-│       ├── app/             # FastAPI application
-│       ├── tests/           # Test suite
-│       ├── requirements.txt
-│       └── .env.example
+│   ├── app/
+│   ├── tests/
+│   └── requirements.txt
+│
 ├── .gitignore
+├── .env.example
 └── README.md
 ```
 
-## Setup Instructions
+---
 
-### Prerequisites
-- Java 21+
-- Maven 3.9+
-- Node.js 20+ / npm 10+
-- Python 3.9+
-- PostgreSQL 18 (or use H2 dev profile)
-- Ollama with models: `qwen2.5:3b`, `nomic-embed-text`
+# ⚙️ Local Architecture
 
-### 1. PostgreSQL Setup
-```sql
-CREATE DATABASE sih_bid_compliance;
-CREATE USER postgres WITH ENCRYPTED PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE sih_bid_compliance TO postgres;
+The current development environment uses:
+
+```text
+React / Vite
+     │
+     │ :5173
+     ▼
+Spring Boot
+     │
+     │ :8080
+     ▼
+PostgreSQL
+     │
+     │
+     ▼
+FastAPI
+     │
+     │ :8000
+     ▼
+Ollama
+     │
+     ├── qwen2.5:3b
+     └── nomic-embed-text
 ```
-Or use the H2 in-memory dev profile (default): `SPRING_PROFILES_ACTIVE=dev`
 
-### 2. Backend
+---
+
+# 🔐 Security Principles
+
+The project follows several security principles:
+
+* JWT-based authentication
+* Role-based authorization
+* Department/sector access control
+* Bid ownership validation
+* Backend authorization before AI context retrieval
+* No cloud LLM API keys
+* No secrets committed to Git
+* Sensitive identifiers should be masked where appropriate
+* No credentials stored in source code
+* Audit logging for important government actions
+
+Before publishing the repository, verify that:
+
+```text
+.env
+credentials
+private keys
+API secrets
+private bidder documents
+real government identifiers
+```
+
+are not committed.
+
+---
+
+# 📊 Current Verification Status
+
+Latest verified regression baseline after Phase 4:
+
+| Test Suite            |           Result |
+| --------------------- | ---------------: |
+| Backend               |   **24/24 PASS** |
+| AI                    | **125/125 PASS** |
+| Frontend Build        |         **PASS** |
+| Hierarchy E2E         |   **13/13 PASS** |
+| Phase 2 Regression    |         **PASS** |
+| Phase 3 Assistant E2E |     **3/3 PASS** |
+| Phase 4 E2E           |   **10/10 PASS** |
+| Lint                  |     **0 errors** |
+
+---
+
+# 🔬 Phase 5 — In Progress
+
+The next development phase extends the platform with:
+
+## External Government Verification
+
+Planned provider categories:
+
+```text
+GST
+PAN / Income Tax
+MCA
+EPFO / ESIC
+DigiLocker
+```
+
+The implementation will distinguish between:
+
+```text
+VERIFIED
+NOT_VERIFIED
+MISMATCH
+UNAVAILABLE
+SANDBOX
+ERROR
+PENDING
+```
+
+The platform will **not claim live government verification unless an authorized, functioning provider actually performs the verification**.
+
+---
+
+## ML Risk Layer
+
+The architecture also provides for a machine-learning risk layer.
+
+Potential feature categories include:
+
+```text
+Requirements passed
+Requirements requiring review
+Requirements failed
+Requirements missing
+Preliminary integrity issues
+Expired documents
+Conflict count
+Risk factor counts
+Document count
+Evidence coverage
+```
+
+Potential model families:
+
+```text
+Logistic Regression
+Random Forest
+XGBoost
+```
+
+However, a production ML model should only be trained when a legitimate, appropriately labelled historical dataset is available.
+
+The project will not fabricate model accuracy, predictions, or training data.
+
+---
+
+# 🧭 Future Roadmap
+
+```text
+Phase 1
+Government Hierarchy
+✅ COMPLETE
+
+Phase 2
+Preliminary Compliance & Integrity
+✅ COMPLETE
+
+Phase 3
+Bidder AI Assistant
+✅ COMPLETE
+
+Phase 4
+Multi-Bidder Comparison
+✅ COMPLETE
+
+Phase 5
+External Verification + ML Risk Layer
+🚧 IN PROGRESS
+
+Phase 6
+Deployment + Final E2E + Production Hardening
+⏳ PLANNED
+```
+
+---
+
+# 🎓 Smart India Hackathon
+
+**Problem Statement:** `SIH26100`
+
+**Project:** AI-Assisted Procurement Bid Compliance Verification Platform
+
+The system is designed as an assistive procurement technology platform focused on:
+
+* Transparency
+* Evidence traceability
+* Automated document analysis
+* Consistent compliance checking
+* Risk identification
+* Procurement workflow efficiency
+* Human-in-the-loop decision making
+
+---
+
+# ⚠️ Important Design Principle
+
+This platform is a **decision-support system**.
+
+It does not autonomously:
+
+* Award contracts
+* Reject bidders
+* Declare a procurement winner
+* Make legal determinations
+* Claim government verification without an actual provider response
+
+Automated results are presented with supporting evidence so authorized officers can review the underlying information and make the final procurement decision.
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+Install:
+
+* Java 21
+* Maven
+* Node.js
+* npm
+* Python 3.x
+* PostgreSQL
+* Ollama
+
+Verify:
+
+```bash
+java -version
+mvn -version
+node -v
+npm -v
+python3 --version
+psql --version
+ollama --version
+```
+
+---
+
+## Start PostgreSQL
+
+Ensure PostgreSQL is running and the configured database is available.
+
+Example:
+
+```text
+Database:
+sih_bid_compliance
+
+Port:
+5432
+```
+
+Use your local environment configuration rather than committing credentials.
+
+---
+
+## Start Ollama
+
+Ensure the required models are available:
+
+```bash
+ollama list
+```
+
+Required models:
+
+```text
+qwen2.5:3b
+nomic-embed-text
+```
+
+---
+
+## Start AI Service
+
+From the AI service directory:
+
+```bash
+cd ai-service
+```
+
+Activate the project's Python environment if applicable and start FastAPI using the project's configured command.
+
+Expected service:
+
+```text
+http://localhost:8000
+```
+
+---
+
+## Start Backend
+
 ```bash
 cd Backend
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-# Runs on http://localhost:8080
+mvn spring-boot:run
 ```
 
-### 3. AI Service
-```bash
-cd ai-service/ai-service
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python3 -m uvicorn app.api_server:app --host 0.0.0.0 --port 8000 --reload
-# Runs on http://localhost:8000
+Expected:
+
+```text
+http://localhost:8080
 ```
 
-### 4. Ollama
-```bash
-ollama serve
-ollama pull qwen2.5:3b
-ollama pull nomic-embed-text
-```
+---
 
-### 5. Frontend
+## Start Frontend
+
 ```bash
 cd Frontend/Frontend
 npm install
 npm run dev
-# Runs on http://localhost:5173
 ```
 
-### 6. Access the Application
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8080/api
-- AI Service: http://localhost:8000
-- Ollama: http://localhost:11434
+Expected:
 
-## Demo Credentials (Development)
-
-| Role | Email | Password |
-|------|-------|----------|
-| Bidder | user@demo.gov.in | User@123 |
-| Officer | officer@demo.gov.in | Officer@123 |
-
-*These are seeded by the DataSeeder in dev profile.*
-
-## Environment Variables
-
-Create `.env` files from the provided `.env.example` templates.
-
-### Backend (`Backend/.env`)
-```env
-SPRING_PROFILES_ACTIVE=postgres
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=sih_bid_compliance
-DB_USER=postgres
-DB_PASSWORD=your_password
-APP_JWT_SECRET=your_jwt_secret_at_least_64_chars
-AI_SERVICE_BASE_URL=http://localhost:8000
+```text
+http://localhost:5173
 ```
 
-### AI Service (`ai-service/ai-service/.env`)
-```env
-LLM_PROVIDER=ollama
-OLLAMA_MODEL=qwen2.5:3b
-OLLAMA_BASE_URL=http://localhost:11434
-EMBEDDING_PROVIDER=ollama
-OLLAMA_EMBEDDING_MODEL=nomic-embed-text
-OLLAMA_BASE_URL=http://localhost:11434
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=sih_bid_compliance
-DB_USER=postgres
-DB_PASSWORD=your_password
-```
+---
 
-### Frontend (`Frontend/Frontend/.env`)
-```env
-VITE_API_BASE_URL=/api
-```
+# 🧪 Testing
 
-### AI Service (`ai-service/ai-service/.env`)
-```env
-LLM_PROVIDER=ollama
-OLLAMA_MODEL=qwen2.5:3b
-OLLAMA_BASE_URL=http://localhost:11434
-EMBEDDING_PROVIDER=ollama
-OLLAMA_EMBEDDING_MODEL=nomic-embed-text
-OLLAMA_BASE_URL=http://localhost:11434
-```
+## Backend
 
-## AI Pipeline Details
-
-### Phase 1: Document Processing
-- PDF text extraction via Apache PDFBox
-- Page-level text extraction with coordinates
-- Support for PDF, DOCX, XLSX, PPTX, CSV, TXT
-
-### Phase 2: Requirement Extraction
-- Page-by-page LLM extraction
-- Structured output: requirement_id, category, description, required_value, unit, mandatory, ambiguous
-- Source traceability: document_name, page_number, source_text
-
-### Phase 3: Bidder Document Intelligence
-- Page-by-page fact extraction
-- Categories: FINANCIAL, CERTIFICATION, SECURITY, REGISTRATION, EXPERIENCE, TECHNICAL, IDENTITY, SUBMISSION, OTHER
-- Normalized values (e.g., "INR 7 Crore" → 70000000 INR)
-- Confidence scores (0.0-1.0)
-
-### Phase 4: Deterministic Compliance Engine
-- Rule-based evaluation (no LLM)
-- Rules: MINIMUM_VALUE_COMPARISON, CERTIFICATION_MATCH, MISSING_EVIDENCE_RULE, etc.
-- Statuses: PASS, FAIL, MISSING, REVIEW, CONFLICT
-- Conflict detection across documents
-
-### Phase 5: Risk & Conflict Intelligence
-- Risk categories: Financial, Documentation, Experience, Registration, Legal, Security
-- Scoring: 0-100 per category
-- Cross-document conflict detection
-
-### Phase 6: Government RAG
-- Grounded retrieval from government documents (GFR, CVC, procurement manuals)
-- Grounding check: INSUFFICIENT_GOVERNMENT_EVIDENCE if no supporting chunks
-- Citations: document, page, section, similarity score
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - Login
-- `POST /api/auth/register/bidder` - Bidder registration
-- `GET /api/auth/me` - Current user
-
-### Bids
-- `GET /api/bids` - List bids (officer)
-- `GET /api/bids/{bidId}` - Get bid details
-- `POST /api/bids` - Create bid (officer)
-
-### Documents
-- `POST /api/bids/{bidId}/documents` - Upload document
-- `GET /api/bids/{bidId}/documents` - List documents
-
-### Compliance
-- `GET /api/bids/{bidId}/requirements` - List requirements
-- `GET /api/bids/{bidId}/requirements/{reqId}` - Requirement detail
-- `GET /api/bids/{bidId}/requirements/{reqId}/evidence` - Evidence for requirement
-
-### Risk & Conflict
-- `GET /api/bids/{bidId}/risks` - Risk categories
-- `GET /api/bids/{bidId}/conflicts` - Conflicts
-
-### Officer Review
-- `GET /api/bids/{bidId}/review` - Review record
-- `POST /api/bids/{bidId}/review` - Save review decision
-
-### Audit & Reports
-- `GET /api/bids/{bidId}/audit` - Audit trail
-- `POST /api/bids/{bidId}/report/generate` - Generate report
-
-### Government AI (RAG)
-- `POST /api/government/ask` - Ask procurement question
-
-### Government Instructions
-- `GET /api/government-instructions` - List instructions
-- `GET /api/government-instructions/restrictions` - Restrictions only
-
-## Testing
-
-### Backend
 ```bash
 cd Backend
 mvn test
 ```
 
-### AI Service
+## AI Service
+
 ```bash
-cd ai-service/ai-service
-python -m pytest tests/ -v
+cd ai-service
+pytest tests/
 ```
 
-### Frontend
+## Frontend Build
+
 ```bash
 cd Frontend/Frontend
 npm run build
 ```
 
-## Ports
+## E2E
 
-| Service | Port |
-|---------|------|
-| Frontend (Vite) | 5173 |
-| Spring Boot | 8080 |
-| FastAPI | 8000 |
-| Ollama | 11434 |
-| PostgreSQL | 5432 |
+Use the project's configured Playwright/E2E command.
 
-## Security
+---
 
-- All secrets via environment variables (`.env` files are gitignored)
-- JWT authentication with 24h expiration
-- Role-based access control (USER vs GOVERNMENT_OFFICER)
-- No cloud API keys - all AI runs locally via Ollama
-- `.env` files are gitignored; use `.env.example` templates
+# 📄 License
 
-## License
+This repository is developed as part of the **Smart India Hackathon (SIH)** project.
 
-No license has been specified for this project.
+Add the final repository license here once the project team has selected the appropriate license for public distribution.
 
-## Disclaimer
+---
 
-This platform provides AI-assisted decision support and does not replace authorized procurement officers or applicable procurement rules. All final procurement decisions remain the responsibility of authorized human officers.
+# 👨‍💻 Project
+
+**AI-Assisted Procurement Bid Compliance Verification Platform**
+
+**SIH Problem Statement:** `SIH26100`
+
+Built using:
+
+**React · Spring Boot · PostgreSQL · FastAPI · Ollama · Local AI · RAG · Document Intelligence**
+
+---
+
+> **Built to assist procurement teams with evidence-driven, explainable, and human-supervised bid verification.**
