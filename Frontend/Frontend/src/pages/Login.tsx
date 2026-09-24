@@ -4,6 +4,7 @@ import { authService } from '../services/authService';
 import { USE_MOCK } from '../services/api';
 import { AlertCircle, ArrowRight, CheckCircle2, LockKeyhole, Mail, ShieldCheck, UserPlus, Landmark } from 'lucide-react';
 import type { UserRole } from '../types';
+import { homePathForRole } from '../utils/roles';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -17,8 +18,19 @@ export const Login: React.FC = () => {
     setSelectedRole(role);
     setError('');
     if (USE_MOCK) {
-      setUsername(role === 'USER' ? 'user@demo.gov.in' : 'officer@demo.gov.in');
-      setPassword(role === 'USER' ? 'User@123' : 'Officer@123');
+      if (role === 'USER') {
+        setUsername('user@demo.gov.in');
+        setPassword('User@123');
+      } else if (role === 'CENTRAL_ADMIN') {
+        setUsername('admin@demo.gov.in');
+        setPassword('Admin@123');
+      } else if (role === 'SECTOR_USER') {
+        setUsername('railways@demo.gov.in');
+        setPassword('Sector@123');
+      } else {
+        setUsername('officer@demo.gov.in');
+        setPassword('Officer@123');
+      }
     }
   };
 
@@ -28,7 +40,7 @@ export const Login: React.FC = () => {
     setLoading(true);
     try {
       const result = await authService.login(username.trim(), password);
-      navigate(result.user.role === 'USER' ? '/user/dashboard' : '/dashboard');
+      navigate(homePathForRole(result.user.role));
     } catch (err: any) {
       const status = err.response?.status;
       const serverMessage = err.response?.data?.message || err.response?.data?.error;
@@ -120,7 +132,7 @@ export const Login: React.FC = () => {
                 <button
                   type="button"
                   className={`text-left p-3 border rounded-lg transition ${
-                    selectedRole !== 'USER'
+                    selectedRole === 'GOVERNMENT OFFICER'
                       ? 'border-emerald-700 bg-emerald-50 text-slate-900'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                   }`}
@@ -130,6 +142,34 @@ export const Login: React.FC = () => {
                   officer@demo.gov.in
                   <br />
                   Officer@123
+                </button>
+                <button
+                  type="button"
+                  className={`text-left p-3 border rounded-lg transition ${
+                    selectedRole === 'CENTRAL_ADMIN'
+                      ? 'border-amber-700 bg-amber-50 text-slate-900'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                  }`}
+                  onClick={() => handleRoleSelect('CENTRAL_ADMIN')}
+                >
+                  <span className="block font-bold">Central Admin</span>
+                  admin@demo.gov.in
+                  <br />
+                  Admin@123
+                </button>
+                <button
+                  type="button"
+                  className={`text-left p-3 border rounded-lg transition ${
+                    selectedRole === 'SECTOR_USER'
+                      ? 'border-sky-700 bg-sky-50 text-slate-900'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                  }`}
+                  onClick={() => handleRoleSelect('SECTOR_USER')}
+                >
+                  <span className="block font-bold">Sector (Railways)</span>
+                  railways@demo.gov.in
+                  <br />
+                  Sector@123
                 </button>
               </div>
             </div>

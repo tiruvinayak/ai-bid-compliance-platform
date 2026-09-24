@@ -23,7 +23,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # Imports modular route objects from app.api.routes subpackage.
 # Required to include all Phase 7 endpoint handlers in the main FastAPI application.
-from app.api.routes import health, tender, bidder, evaluation, submission, government
+from app.api.routes import health, tender, bidder, evaluation, submission, government, bidder_assistant
 
 
 # Creates and initializes the primary FastAPI application instance.
@@ -144,3 +144,7 @@ app.include_router(submission.router, prefix="/api/ai", tags=["Submission Pipeli
 # Includes government router with prefix /api/ai.
 # Required to register POST /api/ai/government/ask endpoint.
 app.include_router(government.router, prefix="/api/ai", tags=["Government Knowledge RAG"])
+
+# Includes bidder assistant router with prefix /api/ai.
+# Required to register POST /api/ai/bidder-assistant/chat endpoint.
+app.include_router(bidder_assistant.router, prefix="/api/ai", tags=["Bidder AI Assistant"])

@@ -10,4 +10,6 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     Optional<Bid> findByBidId(String bidId);
     List<Bid> findAllByOrderByCreatedAtDesc();
     boolean existsByBidId(String bidId);
+    long countByTenderId(String tenderId);
+    List<Bid> findByTenderIdOrderByCreatedAtDesc(String tenderId);
 }

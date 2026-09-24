@@ -50,6 +50,14 @@ export const Dashboard: React.FC = () => {
         actions={
           <div className="flex items-center gap-2">
             <button
+              onClick={() => navigate('/government')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-md text-xs font-bold transition cursor-pointer"
+              title="Government Hierarchy"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Hierarchy</span>
+            </button>
+            <button
               onClick={fetchBids}
               className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-md text-xs font-bold transition cursor-pointer"
               title="Refresh Queue"

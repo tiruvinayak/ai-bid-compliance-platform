@@ -38,6 +38,12 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       clearAuthState();
     }
+    // Attach a meaningful message for error handling in components
+    if (error.response?.data?.message) {
+      error.message = error.response.data.message;
+    } else if (error.response?.data?.error) {
+      error.message = error.response.data.error;
+    }
     return Promise.reject(error);
   }
 );

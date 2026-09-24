@@ -20,9 +20,11 @@ import {
   PlusCircle,
   Landmark,
   Bot,
-  X
+  X,
+  Network
 } from 'lucide-react';
 import type { Bid, UserProfile } from '../../types';
+import { isBidderRole, roleConsoleLabel } from '../../utils/roles';
 
 interface SidebarProps {
   user: UserProfile;
@@ -34,7 +36,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ user, activeBidId, activeBid, isOpen = false, onClose, onLogout }) => {
-  const isUserRole = user.role === 'USER';
+  const isUserRole = isBidderRole(user.role);
   const [evaluationOpen, setEvaluationOpen] = useState<boolean>(true);
   const bidPath = (suffix: string) => activeBidId ? `/bids/${encodeURIComponent(activeBidId)}${suffix}` : '/dashboard';
 
@@ -69,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, activeBidId, activeBid, 
             ? 'bg-amber-950/80 text-amber-300 border-amber-800/70' 
             : 'bg-blue-950 text-blue-300 border-blue-700/80'
         }`}>
-          {isUserRole ? 'BIDDER APPLICANT' : 'GOVT AUDIT OFFICER'}
+          {roleConsoleLabel(user.role)}
         </span>
       </div>
 
@@ -139,6 +141,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ user, activeBidId, activeBid, 
             <div className="px-3 pb-1.5 pt-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
               OFFICER EVALUATION CONSOLE
             </div>
+
+            <NavLink
+              to="/government"
+              className={({ isActive }) =>
+                `flex items-center justify-between px-3 py-2 rounded text-xs font-semibold transition ${
+                  isActive 
+                    ? "bg-blue-900 text-white shadow-xs border-l-2 border-amber-500" 
+                    : "text-slate-300 hover:bg-slate-900 hover:text-white"
+                }`
+              }
+            >
+              <div className="flex items-center gap-2.5">
+                <Network className="w-4 h-4 text-sky-400" />
+                <span>Government Hierarchy</span>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+            </NavLink>
 
             <NavLink
               to="/dashboard"

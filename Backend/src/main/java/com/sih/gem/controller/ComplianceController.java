@@ -20,13 +20,13 @@ public class ComplianceController {
     }
 
     @GetMapping("/bids/{bidId}/requirements")
-    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER')")
+    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'CENTRAL_ADMIN', 'SECTOR_USER')")
     public ResponseEntity<List<Requirement>> getRequirements(@PathVariable String bidId) {
         return ResponseEntity.ok(complianceService.getRequirements(bidId));
     }
 
     @GetMapping("/bids/{bidId}/requirements/{reqId}")
-    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER')")
+    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'CENTRAL_ADMIN', 'SECTOR_USER')")
     public ResponseEntity<Requirement> getRequirement(@PathVariable String bidId, @PathVariable String reqId) {
         return complianceService.getRequirement(bidId, reqId)
                 .map(ResponseEntity::ok)
@@ -34,7 +34,7 @@ public class ComplianceController {
     }
 
     @GetMapping("/requirements/{reqId}/evidence")
-    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER')")
+    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'CENTRAL_ADMIN', 'SECTOR_USER')")
     public ResponseEntity<EvidenceDetail> getEvidence(@PathVariable String reqId) {
         return complianceService.getEvidence(reqId)
                 .map(ResponseEntity::ok)
@@ -42,7 +42,7 @@ public class ComplianceController {
     }
 
     @GetMapping("/bids/{bidId}/requirements/{reqId}/evidence")
-    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER')")
+    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'CENTRAL_ADMIN', 'SECTOR_USER')")
     public ResponseEntity<EvidenceDetail> getEvidenceForBid(@PathVariable String bidId, @PathVariable String reqId) {
         return complianceService.getEvidence(bidId, reqId)
                 .map(ResponseEntity::ok)

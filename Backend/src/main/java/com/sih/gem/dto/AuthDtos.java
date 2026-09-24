@@ -69,6 +69,8 @@ public class AuthDtos {
             String email,
             String role,
             String accountStatus,
-            String lastLogin
+            String lastLogin,
+            Long sectorId,
+            Long departmentId
     ) {}
 }

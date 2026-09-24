@@ -31,20 +31,20 @@ public class BidController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'USER', 'BIDDER')")
+    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'CENTRAL_ADMIN', 'ADMIN', 'SECTOR_USER', 'USER', 'BIDDER')")
     public ResponseEntity<Bid> createBid(@RequestBody Bid bid) {
         return ResponseEntity.ok(bidService.createBid(bid));
     }
 
     @PutMapping("/{bidId}")
-    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER')")
+    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'CENTRAL_ADMIN', 'ADMIN')")
     public ResponseEntity<Bid> updateBid(@PathVariable String bidId, @RequestBody Bid bid) {
         bid.setBidId(bidId);
         return ResponseEntity.ok(bidService.updateBid(bid));
     }
 
     @DeleteMapping("/{bidId}")
-    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER')")
+    @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'CENTRAL_ADMIN', 'ADMIN')")
     public ResponseEntity<Void> deleteBid(@PathVariable String bidId) {
         bidService.deleteBid(bidId);
         return ResponseEntity.noContent().build();

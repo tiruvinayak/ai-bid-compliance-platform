@@ -1,6 +1,7 @@
 import { api, clearAuthState, USE_MOCK } from './api';
 import { mockUserProfiles } from '../data/mockData';
-import type { UserProfile, UserRole } from '../types';
+import type { UserProfile } from '../types';
+import { homePathForRole, normalizeAuthRole } from '../utils/roles';
 
 export interface BidderRegisterParams {
   name: string;
@@ -22,15 +23,6 @@ export interface OfficerRegisterParams {
   password: string;
 }
 
-const normalizeRole = (value: unknown): UserRole | null => {
-  const role = String(value || '').toUpperCase();
-  if (role === 'USER' || role === 'BIDDER') return 'USER';
-  if (role === 'GOVERNMENT OFFICER' || role === 'GOVT_OFFICER' || role === 'GOVERNMENT_OFFICER') {
-    return 'GOVERNMENT OFFICER';
-  }
-  return null;
-};
-
 const persistSession = (token: string | undefined, user: UserProfile): void => {
   if (token) localStorage.setItem('gem_auth_token', token);
   localStorage.setItem('gem_user_role', user.role);
@@ -38,33 +30,38 @@ const persistSession = (token: string | undefined, user: UserProfile): void => {
 };
 
 export const authService = {
+  homePathForRole,
+
   async login(username: string, pass: string): Promise<{ token: string; user: UserProfile }> {
     if (USE_MOCK) {
       await new Promise((r) => setTimeout(r, 600));
 
       const cleanUser = username.trim().toLowerCase();
-      
+
       let user: UserProfile;
       if (cleanUser === 'user@demo.gov.in' && pass === 'User@123') {
         user = mockUserProfiles['USER'];
       } else if (cleanUser === 'officer@demo.gov.in' && pass === 'Officer@123') {
         user = mockUserProfiles['GOVERNMENT OFFICER'];
+      } else if (cleanUser === 'admin@demo.gov.in' && pass === 'Admin@123') {
+        user = mockUserProfiles['CENTRAL_ADMIN'];
+      } else if (cleanUser === 'railways@demo.gov.in' && pass === 'Sector@123') {
+        user = mockUserProfiles['SECTOR_USER'];
       } else {
-        throw new Error("Invalid credentials. Use user@demo.gov.in or officer@demo.gov.in.");
+        throw new Error('Invalid credentials. Use demo accounts from the login panel.');
       }
 
-      const token = `mock_jwt_${user.role === 'USER' ? 'user_bidder' : 'gov_officer'}_2026`;
+      const token = `mock_jwt_${user.role}_2026`;
       persistSession(token, user);
-      
+
       return { token, user };
     }
 
     const response = await api.post('/auth/login', { username, password: pass });
     const data = response.data;
 
-    // Normalize only roles explicitly understood by the UI.
     if (data?.user) {
-      const role = normalizeRole(data.user.role);
+      const role = normalizeAuthRole(data.user.role);
       if (!role || !data.token) {
         clearAuthState();
         throw new Error('Authentication response did not contain a valid session role or token.');
@@ -75,7 +72,7 @@ export const authService = {
       clearAuthState();
       throw new Error('Authentication response did not contain a user session.');
     }
-    
+
     return data;
   },
 
@@ -150,7 +147,7 @@ export const authService = {
       const savedRole = localStorage.getItem('gem_user_role');
       const savedEmail = localStorage.getItem('gem_user_email');
       const token = localStorage.getItem('gem_auth_token');
-      const role = normalizeRole(savedRole);
+      const role = normalizeAuthRole(savedRole);
       if (!token || !savedEmail || !role) {
         clearAuthState();
         throw new Error('No valid authenticated session found.');
@@ -159,7 +156,7 @@ export const authService = {
     }
     const response = await api.get('/auth/me');
     const user = response.data;
-    const role = normalizeRole(user?.role);
+    const role = normalizeAuthRole(user?.role);
     if (!user || !role) {
       clearAuthState();
       throw new Error('Authenticated user has no recognized role.');

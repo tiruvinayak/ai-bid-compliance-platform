@@ -22,6 +22,7 @@ public class AnalysisService {
     private final ConflictItemRepository conflictRepository;
     private final AuditEventRepository auditRepository;
     private final BidderDocumentRepository documentRepository;
+    private final PreliminaryIntegrityService integrityService;
 
     public AnalysisService(BidRepository bidRepository,
                            RequirementRepository requirementRepository,
@@ -29,7 +30,8 @@ public class AnalysisService {
                            RiskCategorySummaryRepository riskRepository,
                            ConflictItemRepository conflictRepository,
                            AuditEventRepository auditRepository,
-                           BidderDocumentRepository documentRepository) {
+                           BidderDocumentRepository documentRepository,
+                           PreliminaryIntegrityService integrityService) {
         this.bidRepository = bidRepository;
         this.requirementRepository = requirementRepository;
         this.evidenceRepository = evidenceRepository;
@@ -37,6 +39,7 @@ public class AnalysisService {
         this.conflictRepository = conflictRepository;
         this.auditRepository = auditRepository;
         this.documentRepository = documentRepository;
+        this.integrityService = integrityService;
     }
 
     /**
@@ -64,6 +67,10 @@ public class AnalysisService {
 
         List<ConflictItem> oldConflicts = conflictRepository.findByBidId(bidId);
         if (!oldConflicts.isEmpty()) conflictRepository.deleteAll(oldConflicts);
+
+        // Stage 0: Preliminary Integrity Checks (Phase 2)
+        List<PreliminaryVerificationCheck> preliminaryChecks = integrityService.runPreliminaryChecks(bidId);
+        Map<String, Object> integritySummary = integrityService.getSummary(bidId);
 
         // Gather all document text for the bid
         List<BidderDocument> docs = documentRepository.findByBidIdOrderByUploadedAtDesc(bidId);

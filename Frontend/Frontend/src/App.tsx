@@ -5,6 +5,9 @@ import { AuthLayout } from './layouts/AuthLayout';
 import { Login } from './pages/Login';
 import { BidderSignup } from './pages/BidderSignup';
 import { Dashboard } from './pages/Dashboard';
+import { CentralGovernmentDashboard } from './pages/CentralGovernmentDashboard';
+import { SectorPage } from './pages/SectorPage';
+import { DepartmentPage } from './pages/DepartmentPage';
 import { UserDashboard } from './pages/UserDashboard';
 import { UserUpload } from './pages/UserUpload';
 import { UserUploads } from './pages/UserUploads';
@@ -24,10 +27,15 @@ import { ConflictDashboard } from './pages/ConflictDashboard';
 import { ReviewPage } from './pages/ReviewPage';
 import { ReportPage } from './pages/ReportPage';
 import { AuditPage } from './pages/AuditPage';
+import { homePathForRole, isBidderRole, isGovernmentRole } from './utils/roles';
+import type { UserRole } from './types';
 
+type GovAllowedRole = 'GOVERNMENT OFFICER' | 'CENTRAL_ADMIN' | 'SECTOR_USER';
 
-// Role Guard Component
-const ProtectedRoute: React.FC<{ allowedRole?: 'USER' | 'GOVERNMENT OFFICER'; children: React.ReactNode }> = ({ allowedRole, children }) => {
+const ProtectedRoute: React.FC<{
+  allowedRole?: 'USER' | GovAllowedRole | GovAllowedRole[];
+  children: React.ReactNode;
+}> = ({ allowedRole, children }) => {
   const location = useLocation();
   const [, setAuthVersion] = React.useState(0);
 
@@ -38,50 +46,48 @@ const ProtectedRoute: React.FC<{ allowedRole?: 'USER' | 'GOVERNMENT OFFICER'; ch
   }, []);
 
   const token = localStorage.getItem('gem_auth_token');
-  const role = localStorage.getItem('gem_user_role');
+  const role = localStorage.getItem('gem_user_role') as UserRole | null;
 
-  if (!token || (role !== 'USER' && role !== 'GOVERNMENT OFFICER')) {
+  if (!token || (!isBidderRole(role) && !isGovernmentRole(role))) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRole && role !== allowedRole) {
-    if (role === 'USER') {
-      return <Navigate to="/user/dashboard" replace />;
-    } else {
-      return <Navigate to="/dashboard" replace />;
+  if (allowedRole) {
+    const allowed = (Array.isArray(allowedRole) ? allowedRole : [allowedRole]) as string[];
+    if (!role || !allowed.includes(role)) {
+      return <Navigate to={homePathForRole(role)} replace />;
     }
   }
 
   return <React.Fragment key={location.pathname}>{children}</React.Fragment>;
 };
 
-// Root Redirect Guard
+const GovernmentRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <ProtectedRoute allowedRole={['GOVERNMENT OFFICER', 'CENTRAL_ADMIN', 'SECTOR_USER']}>
+    {children}
+  </ProtectedRoute>
+);
+
 const DefaultRedirect: React.FC = () => {
   const token = localStorage.getItem('gem_auth_token');
-  const role = localStorage.getItem('gem_user_role');
+  const role = localStorage.getItem('gem_user_role') as UserRole | null;
 
-  if (!token || (role !== 'USER' && role !== 'GOVERNMENT OFFICER')) {
+  if (!token || (!isBidderRole(role) && !isGovernmentRole(role))) {
     return <Navigate to="/login" replace />;
   }
-  if (role === 'USER') {
-    return <Navigate to="/user/dashboard" replace />;
-  }
-  return <Navigate to="/dashboard" replace />;
+  return <Navigate to={homePathForRole(role)} replace />;
 };
 
 export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Auth Layout */}
         <Route element={<AuthLayout />}>
-<Route path="/login" element={<Login />} />
-        <Route path="/signup/bidder" element={<BidderSignup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup/bidder" element={<BidderSignup />} />
         </Route>
 
-        {/* Main Application Layout */}
         <Route element={<MainLayout />}>
-          {/* USER / BIDDER ROUTES */}
           <Route
             path="/user/dashboard"
             element={
@@ -107,119 +113,142 @@ export function App() {
             }
           />
 
-          {/* GOVERNMENT OFFICER ROUTES */}
+          <Route
+            path="/government"
+            element={
+              <GovernmentRoute>
+                <CentralGovernmentDashboard />
+              </GovernmentRoute>
+            }
+          />
+          <Route
+            path="/government/sectors/:sectorId"
+            element={
+              <GovernmentRoute>
+                <SectorPage />
+              </GovernmentRoute>
+            }
+          />
+          <Route
+            path="/government/departments/:departmentId"
+            element={
+              <GovernmentRoute>
+                <DepartmentPage />
+              </GovernmentRoute>
+            }
+          />
+
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <Dashboard />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/create"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <CreateBid />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/upload-tender"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <TenderUpload />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/upload-documents"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <DocumentUpload />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/analysis"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <AnalysisProgress />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/compliance"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <ComplianceDashboard />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/requirements/:reqId"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <RequirementDetails />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/evidence/:reqId"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <EvidenceViewer />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/risks"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <RiskDashboard />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/conflicts"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <ConflictDashboard />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/review"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <ReviewPage />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/report"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <ReportPage />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
             path="/bids/:id/audit"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <AuditPage />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
 
-          {/* COMMON SHARED INSTITUTIONAL ROUTES */}
           <Route
             path="/government-instructions"
             element={
-              <ProtectedRoute allowedRole="GOVERNMENT OFFICER">
+              <GovernmentRoute>
                 <GovernmentInstructions />
-              </ProtectedRoute>
+              </GovernmentRoute>
             }
           />
           <Route
@@ -240,7 +269,6 @@ export function App() {
           />
         </Route>
 
-        {/* Fallback Catch-All Route */}
         <Route path="*" element={<DefaultRedirect />} />
       </Routes>
     </BrowserRouter>

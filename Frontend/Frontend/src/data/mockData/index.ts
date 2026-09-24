@@ -25,11 +25,35 @@ export const mockUserProfiles: Record<string, UserProfile> = {
   "GOVERNMENT OFFICER": {
     name: "Rajesh V. Sharma",
     designation: "Senior Procurement Officer",
-    department: "Ministry of Electronics & IT (MeitY)",
+    department: "Railway Procurement Department",
     email: "officer@demo.gov.in",
     role: "GOVERNMENT OFFICER",
+    officerId: "OFF-RPD-DEMO-001",
+    departmentId: 1,
+    sectorId: 1,
     accountStatus: "Active",
     lastLogin: "29 Aug 2026, 07:15 PM"
+  },
+  CENTRAL_ADMIN: {
+    name: "Central Government Admin (DEMO)",
+    designation: "Central Procurement Oversight Administrator",
+    department: "Central Government (DEMO)",
+    email: "admin@demo.gov.in",
+    role: "CENTRAL_ADMIN",
+    officerId: "CG-ADMIN-DEMO-001",
+    accountStatus: "Active",
+    lastLogin: "22 Sep 2026, 09:00 AM"
+  },
+  SECTOR_USER: {
+    name: "Railways Sector Officer (DEMO)",
+    designation: "Sector Procurement Coordinator",
+    department: "Railways Sector (DEMO)",
+    email: "railways@demo.gov.in",
+    role: "SECTOR_USER",
+    officerId: "SEC-RAIL-DEMO-001",
+    sectorId: 1,
+    accountStatus: "Active",
+    lastLogin: "22 Sep 2026, 09:05 AM"
   }
 };
 

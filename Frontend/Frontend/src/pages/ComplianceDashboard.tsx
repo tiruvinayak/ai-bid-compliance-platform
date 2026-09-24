@@ -3,11 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ComplianceSummary } from '../components/compliance/ComplianceSummary';
 import { RequirementTable } from '../components/compliance/RequirementTable';
+import { PreliminaryVerification } from '../components/compliance/PreliminaryVerification';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
 import { complianceService } from '../services/complianceService';
 import { bidService } from '../services/bidService';
-import type { Bid, Requirement } from '../types';
+import type { Bid, Requirement, PreliminaryVerificationSummary, PreliminaryVerificationCheck } from '../types';
 import { ShieldAlert, UserCheck } from 'lucide-react';
 
 export const ComplianceDashboard: React.FC = () => {
@@ -16,6 +17,8 @@ export const ComplianceDashboard: React.FC = () => {
 
   const [bid, setBid] = useState<Bid | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
+  const [preliminarySummary, setPreliminarySummary] = useState<PreliminaryVerificationSummary | null>(null);
+  const [preliminaryChecks, setPreliminaryChecks] = useState<PreliminaryVerificationCheck[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
@@ -28,13 +31,18 @@ export const ComplianceDashboard: React.FC = () => {
       return;
     }
     try {
-      const [bidData, reqsData] = await Promise.all([
+      const [bidData, reqsData, preliminaryData] = await Promise.all([
         bidService.getBidById(id),
-        complianceService.getRequirements(id)
+        complianceService.getRequirements(id),
+        complianceService.getPreliminaryVerification(id)
       ]);
       if (!bidData) throw new Error(`Bid ${id} was not found.`);
       setBid(bidData);
       setRequirements(reqsData);
+      if (preliminaryData) {
+        setPreliminarySummary(preliminaryData.summary);
+        setPreliminaryChecks(preliminaryData.checks);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load compliance records.');
     } finally {
@@ -91,6 +99,13 @@ export const ComplianceDashboard: React.FC = () => {
           </div>
         }
       />
+
+      {preliminarySummary && preliminaryChecks.length > 0 && (
+        <PreliminaryVerification
+          summary={preliminarySummary}
+          checks={preliminaryChecks}
+        />
+      )}
 
       <ComplianceSummary
         total={totalRequirements}

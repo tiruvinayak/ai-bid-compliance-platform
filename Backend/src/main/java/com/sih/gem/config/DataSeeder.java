@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.List;
 public class DataSeeder {
 
     @Bean
+    @Order(50)
     CommandLineRunner seedData(UserRepository userRepository,
                                GovernmentInstructionRepository instructionRepository,
                                HelpdeskFAQRepository faqRepository,
@@ -37,29 +39,33 @@ public class DataSeeder {
     }
 
     private void seedUsers(UserRepository repo, PasswordEncoder encoder) {
-        if (repo.count() > 0) return;
+        // Only create users if they don't already exist
+        if (repo.findByEmail("user@demo.gov.in").isEmpty()) {
+            repo.save(User.builder()
+                    .email("user@demo.gov.in")
+                    .password(encoder.encode("User@123"))
+                    .name("Sathvik Reddy")
+                    .designation("Authorized Bidder Representative")
+                    .department("ABC Technologies Pvt Ltd")
+                    .role("USER")
+                    .accountStatus("Active")
+                    .createdAt(LocalDateTime.now())
+                    .build());
+        }
 
-        repo.save(User.builder()
-                .email("user@demo.gov.in")
-                .password(encoder.encode("User@123"))
-                .name("Sathvik Reddy")
-                .designation("Authorized Bidder Representative")
-                .department("ABC Technologies Pvt Ltd")
-                .role("USER")
-                .accountStatus("Active")
-                .createdAt(LocalDateTime.now())
-                .build());
-
-        repo.save(User.builder()
-                .email("officer@demo.gov.in")
-                .password(encoder.encode("Officer@123"))
-                .name("Rajesh V. Sharma")
-                .designation("Senior Procurement Officer")
-                .department("Ministry of Electronics & IT (MeitY)")
-                .role("GOVERNMENT OFFICER")
-                .accountStatus("Active")
-                .createdAt(LocalDateTime.now())
-                .build());
+        if (repo.findByEmail("officer@demo.gov.in").isEmpty()) {
+            repo.save(User.builder()
+                    .email("officer@demo.gov.in")
+                    .password(encoder.encode("Officer@123"))
+                    .name("Rajesh V. Sharma")
+                    .designation("Senior Procurement Officer")
+                    .department("Railway Procurement Department")
+                    .officerId("OFF-RPD-DEMO-001")
+                    .role("GOVERNMENT OFFICER")
+                    .accountStatus("Active")
+                    .createdAt(LocalDateTime.now())
+                    .build());
+        }
     }
 
     private void seedInstructions(GovernmentInstructionRepository repo) {
@@ -158,7 +164,7 @@ public class DataSeeder {
                 .bidId("GEM-2026-001")
                 .tenderId("TND-GEM-2026-1042")
                 .tenderTitle("Supply and Installation of Network Infrastructure")
-                .department("Ministry of Electronics & IT")
+                .department("Railway Procurement Department")
                 .bidderName("ABC Technologies Pvt Ltd")
                 .registrationNo("CIN-U72900DL2019PTC345678")
                 .gstin("07AABCT1234F1Z5")

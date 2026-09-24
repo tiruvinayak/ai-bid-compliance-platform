@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { documentService } from '../services/documentService';
 import { bidService } from '../services/bidService';
+import { BidderAssistant } from '../components/compliance/BidderAssistant';
 import type { BidderDocument, UserProfile, Bid } from '../types';
 import { 
   FileText, 
@@ -17,8 +18,11 @@ import {
   Image as ImageIcon,
   Presentation,
   Building2,
-  FolderCheck
+  FolderCheck,
+  Bot
 } from 'lucide-react';
+
+type DashboardTab = 'tenders' | 'documents' | 'assistant';
 
 export const UserDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +33,8 @@ export const UserDashboard: React.FC = () => {
   const [bids, setBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('tenders');
+  const [selectedBidId, setSelectedBidId] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,6 +45,9 @@ export const UserDashboard: React.FC = () => {
         ]);
         setDocuments(docs);
         setBids(bList);
+        if (bList.length > 0) {
+          setSelectedBidId(bList[0].bidId || bList[0].id);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unable to load bidder dashboard data.');
       } finally {
@@ -119,6 +128,13 @@ export const UserDashboard: React.FC = () => {
         );
     }
   };
+
+  const tabClass = (tab: DashboardTab) =>
+    `px-5 py-3 text-xs font-extrabold uppercase tracking-wide border-b-2 transition cursor-pointer ${
+      activeTab === tab
+        ? 'border-blue-900 text-blue-900 bg-blue-50/50'
+        : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+    }`;
 
   return (
     <div className="font-sans space-y-6">
@@ -214,121 +230,189 @@ export const UserDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ACTIVE TENDERS ALLOCATED TO BIDDERS */}
+      {/* DASHBOARD TAB NAVIGATION */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Active Government Tenders for Submission</h3>
-            <p className="text-3xs text-slate-500">Tenders open for document verification submission & government officer evaluation</p>
-          </div>
-        </div>
-
-        {bids.length === 0 ? (
-          <div className="p-6 text-center text-xs text-slate-500">No active tenders found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-700">
-              <thead className="bg-slate-50 border-b border-slate-200 text-3xs font-extrabold text-slate-500 uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Tender ID & Title</th>
-                  <th className="py-3 px-4">Allocated Ministry</th>
-                  <th className="py-3 px-4">Compliance Score</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {bids.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900">{b.tenderTitle}</div>
-                      <div className="text-3xs text-slate-500 font-mono">{b.bidId || b.id} • {b.tenderId}</div>
-                    </td>
-                    <td className="py-3 px-4 font-medium text-slate-800">{b.department}</td>
-                    <td className="py-3 px-4 font-bold text-blue-900">
-                      {b.compliancePercentage ? `${b.compliancePercentage}%` : 'Pending'}
-                    </td>
-                    <td className="py-3 px-4 text-center">{getStatusBadge(b.status)}</td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                         onClick={() => navigate(`/user/upload?bidId=${encodeURIComponent(b.bidId || b.id)}`)}
-                        className="px-3 py-1.5 bg-blue-900 hover:bg-blue-950 text-white rounded text-3xs font-bold transition shadow-xs cursor-pointer"
-                      >
-                        Submit Documents
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* RECENT UPLOADS TABLE */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">My Uploaded Document Records</h3>
-            <p className="text-3xs text-slate-500">Latest document submissions with real-time status tracking</p>
-          </div>
+        <nav className="flex overflow-x-auto" role="tablist" aria-label="Bidder dashboard sections">
           <button
-            onClick={() => navigate('/user/uploads')}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-900 hover:text-blue-950 transition cursor-pointer"
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'tenders'}
+            onClick={() => setActiveTab('tenders')}
+            className={tabClass('tenders')}
           >
-            <span>View All Documents</span>
-            <ArrowRight className="w-4 h-4" />
+            Active Tenders
           </button>
-        </div>
-
-        {loading ? (
-          <div className="p-8 text-center text-xs text-slate-500">Loading recent document uploads...</div>
-        ) : documents.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-500">No document uploads found. Please upload documents.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-700">
-              <thead className="bg-slate-50 border-b border-slate-200 text-3xs font-extrabold text-slate-500 uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Filename</th>
-                  <th className="py-3 px-4">Document Type</th>
-                  <th className="py-3 px-4">Uploaded Date</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {documents.slice(0, 5).map((doc) => (
-                  <tr key={doc.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="p-1.5 bg-slate-100 rounded border border-slate-200 shrink-0">
-                          {getFormatIcon(doc.fileFormat)}
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-900">{doc.filename}</div>
-                          <div className="text-3xs text-slate-500">{doc.fileSize} • {doc.fileFormat}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-slate-800">{doc.docType}</td>
-                    <td className="py-3 px-4 text-slate-600 font-mono text-3xs">{doc.uploadedAt}</td>
-                    <td className="py-3 px-4 text-center">{getStatusBadge(doc.processingStatus)}</td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => navigate('/user/uploads')}
-                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded text-3xs font-bold transition cursor-pointer"
-                      >
-                        View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'documents'}
+            onClick={() => setActiveTab('documents')}
+            className={tabClass('documents')}
+          >
+            Recent Uploads
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'assistant'}
+            onClick={() => setActiveTab('assistant')}
+            className={tabClass('assistant')}
+          >
+            AI Assistant
+          </button>
+        </nav>
       </div>
+
+      {activeTab === 'tenders' && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">Active Government Tenders for Submission</h3>
+              <p className="text-3xs text-slate-500">Tenders open for document verification submission & government officer evaluation</p>
+            </div>
+          </div>
+
+          {bids.length === 0 ? (
+            <div className="p-6 text-center text-xs text-slate-500">No active tenders found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-50 border-b border-slate-200 text-3xs font-extrabold text-slate-500 uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4">Tender ID & Title</th>
+                    <th className="py-3 px-4">Allocated Ministry</th>
+                    <th className="py-3 px-4">Compliance Score</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {bids.map((b) => (
+                    <tr key={b.id} className="hover:bg-slate-50/80 transition">
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-slate-900">{b.tenderTitle}</div>
+                        <div className="text-3xs text-slate-500 font-mono">{b.bidId || b.id} • {b.tenderId}</div>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-slate-800">{b.department}</td>
+                      <td className="py-3 px-4 font-bold text-blue-900">
+                        {b.compliancePercentage ? `${b.compliancePercentage}%` : 'Pending'}
+                      </td>
+                      <td className="py-3 px-4 text-center">{getStatusBadge(b.status)}</td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                           onClick={() => navigate(`/user/upload?bidId=${encodeURIComponent(b.bidId || b.id)}`)}
+                          className="px-3 py-1.5 bg-blue-900 hover:bg-blue-950 text-white rounded text-3xs font-bold transition shadow-xs cursor-pointer"
+                        >
+                          Submit Documents
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'documents' && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wide">My Uploaded Document Records</h3>
+              <p className="text-3xs text-slate-500">Latest document submissions with real-time status tracking</p>
+            </div>
+            <button
+              onClick={() => navigate('/user/uploads')}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-900 hover:text-blue-950 transition cursor-pointer"
+            >
+              <span>View All Documents</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="p-8 text-center text-xs text-slate-500">Loading recent document uploads...</div>
+          ) : documents.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-500">No document uploads found. Please upload documents.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-50 border-b border-slate-200 text-3xs font-extrabold text-slate-500 uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4">Filename</th>
+                    <th className="py-3 px-4">Document Type</th>
+                    <th className="py-3 px-4">Uploaded Date</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {documents.slice(0, 5).map((doc) => (
+                    <tr key={doc.id} className="hover:bg-slate-50/80 transition">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1.5 bg-slate-100 rounded border border-slate-200 shrink-0">
+                            {getFormatIcon(doc.fileFormat)}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900">{doc.filename}</div>
+                            <div className="text-3xs text-slate-500">{doc.fileSize} • {doc.fileFormat}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-slate-800">{doc.docType}</td>
+                      <td className="py-3 px-4 text-slate-600 font-mono text-3xs">{doc.uploadedAt}</td>
+                      <td className="py-3 px-4 text-center">{getStatusBadge(doc.processingStatus)}</td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => navigate('/user/uploads')}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded text-3xs font-bold transition cursor-pointer"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'assistant' && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-4">
+          {bids.length === 0 ? (
+            <div className="min-h-[400px] flex flex-col items-center justify-center text-center text-slate-500">
+              <Bot className="w-16 h-16 text-slate-300" />
+              <p className="mt-4 text-sm font-medium text-slate-700">No active bids to assist with</p>
+              <p className="text-xs text-slate-500 mt-1">Create a bid submission to use the AI Assistant</p>
+            </div>
+          ) : (
+            <div>
+              <div className="mb-3">
+                <label htmlFor="assistant-bid-select" className="block text-xs font-bold uppercase text-slate-500 mb-2">
+                  Select Bid for AI Assistance
+                </label>
+                <select
+                  id="assistant-bid-select"
+                  value={selectedBidId || bids[0]?.bidId || bids[0]?.id || ''}
+                  onChange={(e) => setSelectedBidId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm text-slate-900 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent"
+                >
+                  {bids.map((b) => (
+                    <option key={b.id} value={b.bidId || b.id}>
+                      {b.tenderTitle} ({b.bidId || b.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <BidderAssistant bidId={selectedBidId || bids[0]?.bidId || bids[0]?.id || ''} />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

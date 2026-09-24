@@ -44,7 +44,13 @@ public class User {
     private String registrationNo;
 
     @Column(nullable = false)
-    private String role; // BIDDER / USER / GOVT_OFFICER / GOVERNMENT OFFICER
+    private String role; // BIDDER / USER / GOVT_OFFICER / GOVERNMENT OFFICER / CENTRAL_ADMIN / SECTOR_USER
+
+    /** Optional FK to Sector.id for SECTOR_USER / officer scoping. */
+    private Long sectorId;
+
+    /** Optional FK to Department.id for procurement officer scoping. */
+    private Long departmentId;
 
     private String accountStatus;
 
@@ -94,6 +100,12 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public Long getSectorId() { return sectorId; }
+    public void setSectorId(Long sectorId) { this.sectorId = sectorId; }
+
+    public Long getDepartmentId() { return departmentId; }
+    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
 
     public String getAccountStatus() { return accountStatus; }
     public void setAccountStatus(String accountStatus) { this.accountStatus = accountStatus; }

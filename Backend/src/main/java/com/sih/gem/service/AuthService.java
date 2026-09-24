@@ -140,7 +140,9 @@ public class AuthService {
                 user.getEmail(),
                 user.getRole(),
                 user.getAccountStatus(),
-                user.getLastLogin() == null ? null : user.getLastLogin().toString()
+                user.getLastLogin() == null ? null : user.getLastLogin().toString(),
+                user.getSectorId(),
+                user.getDepartmentId()
         );
     }
 }

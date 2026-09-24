@@ -47,6 +47,10 @@ public class AiClient {
         return postJson("/api/ai/government/ask", request);
     }
 
+    public JsonNode assistantChat(java.util.Map<String, Object> request) {
+        return postJson("/api/ai/bidder-assistant/chat", objectMapper.valueToTree(request));
+    }
+
     private JsonNode get(String path) {
         try {
             JsonNode response = restClient.get().uri(path).retrieve().body(JsonNode.class);

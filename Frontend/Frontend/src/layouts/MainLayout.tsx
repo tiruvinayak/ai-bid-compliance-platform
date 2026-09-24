@@ -5,6 +5,7 @@ import { Header } from '../components/layout/Header';
 import { authService } from '../services/authService';
 import type { Bid, UserProfile } from '../types';
 import { bidService } from '../services/bidService';
+import { isGovernmentRole } from '../utils/roles';
 
 export const MainLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export const MainLayout: React.FC = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (user?.role !== 'GOVERNMENT OFFICER' || !activeBidId) {
+    if (!isGovernmentRole(user?.role) || !activeBidId) {
       return;
     }
 

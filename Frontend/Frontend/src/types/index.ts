@@ -1,5 +1,14 @@
 export type ComplianceStatus = 'PASS' | 'FAIL' | 'REVIEW' | 'MISSING' | 'CONFLICT';
 
+export type PreliminaryCheckStatus = 'PASS' | 'REVIEW' | 'FAIL' | 'MISSING' | 'CONFLICT';
+
+export type PreliminaryCheckType = 
+  | 'DOCUMENT_VALIDITY'
+  | 'REQUIRED_DOCUMENT'
+  | 'EXPIRY_DATE'
+  | 'FIELD_COMPLETENESS'
+  | 'CROSS_PAGE_CONSISTENCY';
+
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export type DocProcessingStatus = 'UPLOADING' | 'UPLOADED' | 'PROCESSING' | 'PROCESSED' | 'COMPLETED' | 'FAILED';
@@ -109,7 +118,81 @@ export interface OfficerReviewRecord {
   updatedAt?: string;
 }
 
-export type UserRole = 'USER' | 'GOVERNMENT OFFICER';
+export type UserRole = 'USER' | 'GOVERNMENT OFFICER' | 'CENTRAL_ADMIN' | 'SECTOR_USER';
+
+export interface SectorSummary {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  active?: boolean;
+  departmentCount: number;
+  tenderCount: number;
+  activeTenderCount: number;
+  completedTenderCount: number;
+}
+
+export interface DepartmentSummary {
+  id: number;
+  sectorId: number;
+  sectorCode?: string;
+  sectorName?: string;
+  code: string;
+  name: string;
+  description?: string;
+  active?: boolean;
+  tenderCount: number;
+  activeTenderCount: number;
+  completedTenderCount: number;
+  officerCount: number;
+}
+
+export interface SectorDetail extends SectorSummary {
+  departments: DepartmentSummary[];
+}
+
+export interface OfficerSummary {
+  id: number;
+  name: string;
+  email: string;
+  designation?: string;
+  officerId?: string;
+  role?: string;
+}
+
+export interface HierarchyTender {
+  id: number;
+  tenderId: string;
+  title: string;
+  status: string;
+  category?: string;
+  tenderDate?: string;
+  closingDate?: string;
+  departmentId?: number;
+  departmentName?: string;
+  sectorId?: number;
+  sectorName?: string;
+  assignedOfficerId?: number;
+  assignedOfficerName?: string;
+  bidderCount: number;
+  complianceStatus?: string;
+  primaryBidId?: string;
+}
+
+export interface DepartmentDetail extends DepartmentSummary {
+  officers: OfficerSummary[];
+  tenders: HierarchyTender[];
+}
+
+export interface CentralOverview {
+  totalSectors: number;
+  totalDepartments: number;
+  totalTenders: number;
+  activeTenders: number;
+  completedTenders: number;
+  sectors: SectorSummary[];
+  recentTenders: HierarchyTender[];
+}
 
 export interface DocStage {
   name: string;
@@ -153,6 +236,8 @@ export interface UserProfile {
   role: UserRole;
   accountStatus?: string;
   lastLogin?: string;
+  sectorId?: number;
+  departmentId?: number;
 }
 
 export interface GovernmentInstruction {
@@ -191,4 +276,57 @@ export interface HelpdeskQuery {
   category: string;
   message: string;
   createdAt?: string;
+}
+
+export interface PreliminaryVerificationSummary {
+  overallStatus: PreliminaryCheckStatus;
+  summary: {
+    pass: number;
+    review: number;
+    fail: number;
+    missing: number;
+    conflict: number;
+    total: number;
+  };
+}
+
+export interface PreliminaryVerificationCheck {
+  id: number;
+  bidId: string;
+  documentId: string;
+  checkType: PreliminaryCheckType;
+  status: PreliminaryCheckStatus;
+  message: string;
+  fieldName: string | null;
+  expectedValue: string | null;
+  actualValue: string | null;
+  sourcePage: number | null;
+  evidenceReference: string | null;
+  createdAt: string;
+}
+
+export interface AssistantMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  citations?: AssistantCitation[];
+  timestamp: string;
+  groundingStatus?: string;
+}
+
+export interface AssistantCitation {
+  type: 'requirement' | 'fact' | 'compliance' | 'preliminary' | 'evidence' | 'risk' | 'conflict';
+  id: string;
+  page?: number | null;
+}
+
+export interface AssistantChatRequest {
+  question: string;
+  chat_history?: AssistantMessage[];
+}
+
+export interface AssistantChatResponse {
+  answer: string;
+  citations: AssistantCitation[];
+  grounding_status: 'GROUNDED' | 'INSUFFICIENT_EVIDENCE' | 'GENERATION_FAILED' | 'VALIDATION_ERROR';
+  error_message?: string;
 }
