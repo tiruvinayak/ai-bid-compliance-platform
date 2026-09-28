@@ -38,6 +38,40 @@ app:
     connect-timeout-ms: ${AI_CONNECT_TIMEOUT_MS:5000}
     read-timeout-ms: ${AI_READ_TIMEOUT_MS:300000}
 
+  # Phase 5A — External government verification providers.
+  # Every provider defaults to disabled/empty → UNAVAILABLE.
+  # Supply real credentials via environment variables only (see Backend/.env.example).
+  # NEVER commit real API keys or government credentials.
+  verification:
+    connect-timeout-ms: ${VERIFICATION_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${VERIFICATION_READ_TIMEOUT_MS:5000}
+    providers:
+      gst:
+        enabled: ${GST_VERIFICATION_ENABLED:false}
+        base-url: ${GST_VERIFICATION_BASE_URL:}
+        api-key: ${GST_VERIFICATION_API_KEY:}
+        mode: ${GST_VERIFICATION_MODE:production}
+      pan:
+        enabled: ${PAN_VERIFICATION_ENABLED:false}
+        base-url: ${PAN_VERIFICATION_BASE_URL:}
+        api-key: ${PAN_VERIFICATION_API_KEY:}
+        mode: ${PAN_VERIFICATION_MODE:production}
+      mca:
+        enabled: ${MCA_VERIFICATION_ENABLED:false}
+        base-url: ${MCA_VERIFICATION_BASE_URL:}
+        api-key: ${MCA_VERIFICATION_API_KEY:}
+        mode: ${MCA_VERIFICATION_MODE:production}
+      epfo-esic:
+        enabled: ${EPFO_ESIC_VERIFICATION_ENABLED:false}
+        base-url: ${EPFO_ESIC_VERIFICATION_BASE_URL:}
+        api-key: ${EPFO_ESIC_VERIFICATION_API_KEY:}
+        mode: ${EPFO_ESIC_VERIFICATION_MODE:production}
+      digilocker:
+        enabled: ${DIGILOCKER_VERIFICATION_ENABLED:false}
+        base-url: ${DIGILOCKER_VERIFICATION_BASE_URL:}
+        api-key: ${DIGILOCKER_VERIFICATION_API_KEY:}
+        mode: ${DIGILOCKER_VERIFICATION_MODE:production}
+
 logging:
   level:
     com.sih.gem: INFO

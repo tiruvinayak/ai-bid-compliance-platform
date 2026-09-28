@@ -1,0 +1,16 @@
+{
+  "registryUpdated": "2026-09-28T12:24:40+00:00",
+  "activeModelVersion": null,
+  "models": [
+    {
+      "modelVersion": "risk-model-v1",
+      "featureVersion": "v1",
+      "status": "NOT_TRAINED",
+      "algorithm": null,
+      "trainingTimestamp": null,
+      "datasetVersion": null,
+      "metrics": null,
+      "reason": "MODEL STATUS: NOT TRAINED \u2014 insufficient validated labeled historical dataset. No production ML model trained. (dataset file not found: /private/var/folders/hh/qjsw63jx73bb77snxbrm3sq80000gn/T/pytest-of-padaltiruvinayak/pytest-3/test_train_cli_exits_nonzero_w0/absent.csv)"
+    }
+  ]
+}

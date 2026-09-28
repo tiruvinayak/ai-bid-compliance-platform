@@ -69,7 +69,8 @@ public class AiAssistantService {
                          String currentUser, boolean officer) {
         // Verify bid exists and user has access
         Bid bid = bidRepository.findByBidId(bidId)
-                .orElseThrow(() -> new IllegalArgumentException("Bid not found: " + bidId));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Bid not found: " + bidId));
 
         List<BidderDocument> documents = documentRepository.findByBidIdOrderByUploadedAtDesc(bidId);
         authorize(currentUser, officer, bid, documents);

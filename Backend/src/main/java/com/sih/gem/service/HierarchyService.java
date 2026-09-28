@@ -194,11 +194,20 @@ public class HierarchyService {
     }
 
     public TenderListItemDto getTender(String tenderId) {
+        return toTenderListItem(requireAccessibleTender(tenderId));
+    }
+
+    /**
+     * Loads a tender after enforcing the caller's hierarchy access
+     * (department/sector scope). Shared by hierarchy reads and Phase 4
+     * multi-bidder comparison so authorization logic is not duplicated.
+     */
+    public Tender requireAccessibleTender(String tenderId) {
         User current = requireCurrentUser();
         Tender tender = tenderRepository.findByTenderId(tenderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tender not found"));
         assertCanAccessDepartment(current, tender.getDepartment());
-        return toTenderListItem(tender);
+        return tender;
     }
 
     private SectorSummaryDto toSectorSummary(Sector sector) {

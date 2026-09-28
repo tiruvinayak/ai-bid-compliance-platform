@@ -15,7 +15,7 @@ export const AuthLayout: React.FC = () => {
             <p className="text-3xs text-slate-500 font-medium">AI-Assisted Procurement Bid Compliance Verification Platform</p>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-3xs font-bold uppercase tracking-wider text-slate-500"><ShieldCheck className="w-4 h-4 text-emerald-700" /> Secure prototype workspace</div>
+        <div className="hidden sm:flex items-center gap-2 text-3xs font-bold uppercase tracking-wider text-slate-500"><ShieldCheck className="w-4 h-4 text-emerald-700" /> Secure workspace</div>
       </header>
 
       <main className="flex-1 flex items-center justify-center p-4 sm:p-8">
@@ -23,7 +23,7 @@ export const AuthLayout: React.FC = () => {
       </main>
 
       <footer className="py-3 px-6 border-t border-slate-200 bg-white text-center text-3xs text-slate-500">
-        SIH26100 prototype • Government procurement compliance and evidence review
+        SIH26100 • Government procurement compliance and evidence review
       </footer>
     </div>
   );

@@ -1,0 +1,22 @@
+{
+  "registryUpdated": "2026-09-24",
+  "activeModelVersion": null,
+  "models": [
+    {
+      "modelVersion": "risk-model-v1",
+      "featureVersion": "v1",
+      "status": "NOT_TRAINED",
+      "algorithm": null,
+      "trainingTimestamp": null,
+      "datasetVersion": null,
+      "metrics": null,
+      "intercept": null,
+      "coefficients": null,
+      "featureMean": null,
+      "featureStd": null,
+      "thresholdMedium": 0.33,
+      "thresholdHigh": 0.66,
+      "reason": "MODEL STATUS: NOT TRAINED — insufficient validated labeled historical dataset. No production ML model trained."
+    }
+  ]
+}

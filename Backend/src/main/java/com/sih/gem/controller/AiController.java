@@ -39,8 +39,15 @@ public class AiController {
     @PostMapping("/government/ask")
     @PreAuthorize("hasAnyRole('GOVERNMENT_OFFICER', 'GOVT_OFFICER', 'OFFICER')")
     public ResponseEntity<JsonNode> askGovernment(@Valid @RequestBody GovernmentRagRequest request) {
-        return ResponseEntity.ok(aiService.askGovernment(objectMapper.valueToTree(Map.of(
-                "question", request.question(), "top_k", request.topK(), "threshold", request.threshold()))));
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("question", request.question());
+        payload.put("top_k", request.topK());
+        payload.put("threshold", request.threshold());
+        // Attach live project data only when the question overlaps project
+        // keywords so unrelated questions fall through to pure RAG refusal.
+        JsonNode context = aiService.projectContextFor(request.question());
+        if (context != null) payload.put("context", context);
+        return ResponseEntity.ok(aiService.askGovernment(objectMapper.valueToTree(payload)));
     }
 
     public record GovernmentRagRequest(

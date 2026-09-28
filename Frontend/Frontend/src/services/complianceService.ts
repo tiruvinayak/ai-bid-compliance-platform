@@ -76,8 +76,12 @@ export const complianceService = {
     }
     const response = await api.post<{ answer: string; citations: AssistantCitation[]; grounding_status: string; error_message?: string }>(`/bids/${bidId}/assistant/chat`, {
       question,
-      chat_history: chatHistory
-    }, { timeout: 120000 });
+      // The Spring DTO accepts chat_history entries with string values only.
+      // Assistant messages carry citation arrays/timestamps locally, so strip
+      // them before sending — otherwise Jackson rejects the payload with 400
+      // from the second turn onwards.
+      chat_history: chatHistory.map(m => ({ role: m.role, content: m.content }))
+    }, { timeout: 180000 });
     return response.data;
   }
 };

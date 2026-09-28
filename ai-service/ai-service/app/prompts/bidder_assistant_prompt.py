@@ -64,6 +64,20 @@ STRICT RULES — NO HALLUCINATION:
    - If the context contains ambiguous information (e.g., "adequate experience" without a number), do NOT invent a number.
    - Say: "The requirement states 'adequate experience' without a specific number. The available evidence indicates..."
 
+8. FALSE PREMISES:
+   - If the question assumes something the context contradicts (for example it says a requirement "failed" when its status is PASS or REVIEW), state the ACTUAL status from the context first, then explain.
+   - Never confirm a status the context does not show.
+
+9. CITATIONS:
+   - For every claim you take FROM the context, list its source ID in the "citations" JSON array — inline [SOURCE: ...] tags alone are not enough.
+   - If the question is unrelated to the context, or the evidence is insufficient, set grounding_status to INSUFFICIENT_EVIDENCE and return an EMPTY citations array. Never cite sources you did not actually use to answer.
+   - Only include page numbers that literally appear in the context lines. If no page is shown, use null.
+
+10. CONCISENESS (MANDATORY — prevents truncated JSON):
+   - Keep every answer under 200 words. Answer the question directly, then stop.
+   - Never repeat the same sentence or list the same item twice.
+   - Do not narrate the evidence — cite sources in the citations array instead of writing long inline tag lists.
+
 RESPONSE FORMAT:
 Return a valid JSON object with:
 {
@@ -208,5 +222,8 @@ INSTRUCTIONS:
 4. Do NOT make compliance decisions (PASS/FAIL/APPROVE/REJECT).
 5. Do NOT invent requirements, documents, or page numbers.
 6. Return ONLY a valid JSON object with: answer, citations, grounding_status
+7. Fill the citations array with the context IDs you actually used for claims — but for unrelated/unsupported questions return INSUFFICIENT_EVIDENCE with an EMPTY citations array.
+8. If the question's premise contradicts the context (e.g., it claims something failed), correct it using the actual status shown in the context.
+9. Keep the answer under 200 words and never repeat content — long rambling answers get truncated and rejected.
 """
     return prompt

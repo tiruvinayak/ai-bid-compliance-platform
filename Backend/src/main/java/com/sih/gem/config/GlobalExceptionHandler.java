@@ -10,6 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +19,21 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /**
+     * Preserves ResponseStatusException's intended status (e.g. 404 for unknown
+     * bids/sectors/tenders) instead of collapsing everything to 400.
+     * Must be declared alongside the RuntimeException handler below; Spring
+     * selects this more-specific handler for ResponseStatusException subtypes.
+     */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatus(ResponseStatusException ex) {
+        String msg = ex.getReason() != null ? ex.getReason()
+                : (ex.getMessage() != null ? ex.getMessage() : "Not found");
+        log.warn("Response status {}: {}", ex.getStatusCode(), msg);
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(Map.of("error", msg, "message", msg));
+    }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {

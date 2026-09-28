@@ -20,6 +20,7 @@ import { TenderUpload } from './pages/TenderUpload';
 import { DocumentUpload } from './pages/DocumentUpload';
 import { AnalysisProgress } from './pages/AnalysisProgress';
 import { ComplianceDashboard } from './pages/ComplianceDashboard';
+import { CompareBids } from './pages/CompareBids';
 import { RequirementDetails } from './pages/RequirementDetails';
 import { EvidenceViewer } from './pages/EvidenceViewer';
 import { RiskDashboard } from './pages/RiskDashboard';
@@ -183,6 +184,14 @@ export function App() {
             element={
               <GovernmentRoute>
                 <ComplianceDashboard />
+              </GovernmentRoute>
+            }
+          />
+          <Route
+            path="/bids/:id/compare"
+            element={
+              <GovernmentRoute>
+                <CompareBids />
               </GovernmentRoute>
             }
           />

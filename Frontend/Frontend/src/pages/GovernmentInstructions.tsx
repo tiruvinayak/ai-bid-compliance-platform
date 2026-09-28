@@ -60,7 +60,7 @@ export const GovernmentInstructions: React.FC = () => {
     setRagResult(null);
 
     try {
-      const res = await governmentInstructionService.askGovernment(queryToUse, 5, 0.70);
+      const res = await governmentInstructionService.askGovernment(queryToUse);
       setRagResult(res);
      } catch (err: any) {
       if (err.response?.status === 403) {
@@ -219,14 +219,18 @@ export const GovernmentInstructions: React.FC = () => {
                       <div className="flex items-center justify-between text-blue-400 font-bold">
                         <span className="flex items-center gap-1 font-mono">
                           <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                           {src.document || src.source_document || 'Document not reported'}
+                           {src.document_name || src.document || src.source_document || 'Document not reported'}
                         </span>
-                         <span className="font-mono text-amber-300">Page {src.page ?? src.page_number ?? 'Not reported'}</span>
+                         <span className="font-mono text-amber-300">
+                          {typeof src.page_number === 'number'
+                            ? (src.page_number > 0 ? `Page ${src.page_number}` : 'Live Data')
+                            : (src.page ? `Page ${src.page}` : 'Not reported')}
+                         </span>
                       </div>
-                      {src.section && (
-                        <div className="text-3xs text-slate-400 font-semibold">Section: {src.section}</div>
+                      {(src.section_name || src.section) && (
+                        <div className="text-3xs text-slate-400 font-semibold">Section: {src.section_name || src.section}</div>
                       )}
-                      <p className="text-slate-300 italic line-clamp-3">"{src.text || src.source_text || src.snippet}"</p>
+                      <p className="text-slate-300 italic line-clamp-3">"{src.quoted_text || src.text || src.source_text || src.snippet}"</p>
                     </div>
                   ))}
                 </div>

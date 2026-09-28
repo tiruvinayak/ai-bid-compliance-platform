@@ -131,7 +131,8 @@ class GovernmentRAGService:
         self,
         query: str,
         top_k: Optional[int] = None,
-        min_similarity: Optional[float] = None
+        min_similarity: Optional[float] = None,
+        project_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Main entry point for grounded government guidance questions.
@@ -140,6 +141,10 @@ class GovernmentRAGService:
             query (str): User procurement question or requirement text.
             top_k (int, optional): Maximum retrieval chunks to fetch. Defaults to self.max_context_chunks.
             min_similarity (float, optional): Grounding similarity threshold cutoff.
+            project_context (dict, optional): Live project data (bids, compliance, risks)
+                supplied by the application backend. When present it is injected into the
+                evidence set as a first-class chunk so answers about platform data are
+                grounded in real database records instead of being refused.
 
         Returns:
             Dict[str, Any]: Serialized GovernmentRAGResponse dictionary.
@@ -176,9 +181,13 @@ class GovernmentRAGService:
         )
 
         retrieval_status = retrieval_response.get("status")
+        # Live project data (when supplied) counts as qualifying evidence even if
+        # knowledge-base retrieval is empty, weak, or temporarily unavailable.
+        context_present = bool(project_context)
 
         # Empty knowledge base returns INSUFFICIENT_GOVERNMENT_EVIDENCE without LLM call
-        if retrieval_status == "KNOWLEDGE_BASE_EMPTY":
+        # (unless live project context can ground the answer instead).
+        if retrieval_status == "KNOWLEDGE_BASE_EMPTY" and not context_present:
             return GovernmentRAGResponse(
                 query=clean_query,
                 answer="Insufficient government evidence was retrieved to answer this question.",
@@ -189,7 +198,7 @@ class GovernmentRAGService:
             ).to_dict()
 
         # Handle Phase 6C Retrieval database/embedding errors
-        if retrieval_status in ["DATABASE_ERROR", "EMBEDDING_ERROR", "EMBEDDING_DIMENSION_MISMATCH"]:
+        if retrieval_status in ["DATABASE_ERROR", "EMBEDDING_ERROR", "EMBEDDING_DIMENSION_MISMATCH"] and not context_present:
             return GovernmentRAGResponse(
                 query=clean_query,
                 answer=f"Government knowledge retrieval failed: {retrieval_response.get('error_message')}",
@@ -200,7 +209,7 @@ class GovernmentRAGService:
                 sources=[]
             ).to_dict()
 
-        retrieved_results = retrieval_response.get("results", [])
+        retrieved_results = retrieval_response.get("results", []) or []
 
         # Filter retrieved results against active grounding similarity threshold
         qualifying_chunks = [
@@ -208,13 +217,39 @@ class GovernmentRAGService:
             if r.get("similarity_score", 0.0) >= active_min_similarity
         ]
 
+        # Limit context chunks to max_context_chunks
+        context_chunks = qualifying_chunks[:active_top_k]
+
+        # ---------------------------------------------------------------------
+        # STEP 2B: Inject live project data as a first-class evidence chunk
+        # ---------------------------------------------------------------------
+        # WHAT: Add a synthetic chunk carrying real database records so questions
+        # about bids/compliance/risks are grounded in platform truth.
+        # WHY: Knowledge-base chunks alone cannot answer questions about live data;
+        # refusing them would break the Government AI assistant in the demo.
+        if context_present:
+            context_json = json.dumps(project_context, ensure_ascii=False, default=str)
+            synthetic_chunk: Dict[str, Any] = {
+                "chunk_id": "PROJECT-CONTEXT-001",
+                "document_id": "LIVE-PROJECT-DATA",
+                "document_name": "Live Project Data (SIH26100 Bid Database)",
+                "page_number": 0,
+                "section_name": "Live Project Data",
+                "similarity_score": 1.0,
+                "text": (
+                    "LIVE PROJECT DATA - structured records from the SIH26100 procurement "
+                    "database, provided by the application backend:\n" + context_json
+                ),
+            }
+            context_chunks = [synthetic_chunk] + context_chunks
+
         # -------------------------------------------------------------------------
         # STEP 3: Insufficient Evidence Safety Check
         # -------------------------------------------------------------------------
-        # WHAT: Check if any retrieved chunks met the min_similarity grounding threshold.
+        # WHAT: Check if any evidence (retrieved chunks or live project context) is available.
         # WHY: SAFETY CRITICAL RULE: If evidence is missing or weak, DO NOT CALL LLM.
         # HOW: Return status INSUFFICIENT_GOVERNMENT_EVIDENCE immediately.
-        if not qualifying_chunks:
+        if not context_chunks:
             return GovernmentRAGResponse(
                 query=clean_query,
                 answer="Insufficient government evidence was retrieved to answer this question.",
@@ -223,9 +258,6 @@ class GovernmentRAGService:
                 retrieval_count=len(retrieved_results),
                 sources=[]
             ).to_dict()
-
-        # Limit context chunks to max_context_chunks
-        context_chunks = qualifying_chunks[:active_top_k]
 
         # Build lookup map of retrieved chunks for citation validation and metadata mapping
         context_chunk_map: Dict[str, Dict[str, Any]] = {

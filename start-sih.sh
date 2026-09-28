@@ -34,10 +34,14 @@ cd "${AI_DIR}"
 if lsof -nP -iTCP:8000 -sTCP:LISTEN >/dev/null 2>&1; then
     echo "      ✓ Python AI service is already running on port 8000."
 else
+    # Real local LLM via Ollama — without LLM_PROVIDER the service silently
+    # falls back to the rule-based MockLLMProvider (assistant answers fail).
     if [ -x "${AI_DIR}/.venv/bin/python" ]; then
-        "${AI_DIR}/.venv/bin/python" app/main.py --serve > "${AI_DIR}/app.log" 2>&1 &
+        LLM_PROVIDER=ollama EMBEDDING_PROVIDER=ollama OLLAMA_MODEL="${OLLAMA_MODEL:-qwen2.5:3b}" \
+            "${AI_DIR}/.venv/bin/python" app/main.py --serve > "${AI_DIR}/app.log" 2>&1 &
     else
-        python3 app/main.py --serve > "${AI_DIR}/app.log" 2>&1 &
+        LLM_PROVIDER=ollama EMBEDDING_PROVIDER=ollama OLLAMA_MODEL="${OLLAMA_MODEL:-qwen2.5:3b}" \
+            python3 app/main.py --serve > "${AI_DIR}/app.log" 2>&1 &
     fi
     sleep 3
     echo "      ✓ Python AI service daemon launched on port 8000."

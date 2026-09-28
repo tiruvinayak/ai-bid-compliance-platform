@@ -21,7 +21,7 @@ export const governmentInstructionService = {
     return response.data;
   },
 
-  async askGovernment(question: string, topK: number = 5, threshold: number = 0.70): Promise<any> {
+  async askGovernment(question: string, topK: number = 5, threshold: number = 0.35): Promise<any> {
     if (USE_MOCK) {
       await new Promise((r) => setTimeout(r, 400));
       return {
@@ -33,7 +33,7 @@ export const governmentInstructionService = {
       question,
       top_k: topK,
       threshold
-    });
+    }, { timeout: 180000 });
     return response.data;
   }
 };

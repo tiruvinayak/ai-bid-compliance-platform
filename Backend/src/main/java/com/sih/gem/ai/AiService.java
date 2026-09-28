@@ -2,6 +2,8 @@ package com.sih.gem.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sih.gem.entity.*;
 import com.sih.gem.repository.*;
 import org.springframework.security.access.AccessDeniedException;
@@ -58,6 +60,105 @@ public class AiService {
         }
         return response;
     }
+
+    /**
+     * Builds compact live project context for the Government AI assistant so
+     * questions about bids, compliance, risks and conflicts are answered from
+     * real database records. Returns null when the question has no overlap with
+     * project keywords, letting the RAG pipeline fall back to knowledge-base
+     * retrieval only (unrelated questions then get a clean refusal).
+     */
+    public JsonNode projectContextFor(String question) {
+        String q = question == null ? "" : question.toLowerCase().trim();
+        if (q.isEmpty()) return null;
+        List<Bid> bids = bidRepository.findAll();
+        if (bids.isEmpty()) return null;
+
+        java.util.Set<String> keywords = new java.util.LinkedHashSet<>(List.of(
+                "bid", "bids", "bidder", "tender", "tenders", "procurement", "compliance", "risk", "risks",
+                "conflict", "conflicts", "pass", "fail", "missing", "review", "status", "evaluation",
+                "document", "documents", "turnover", "gst", "gstin", "pan", "cin", "integrity", "experience",
+                "technical", "financial", "registration", "requirement", "requirements", "compare", "comparison",
+                "sector", "department", "audit", "verification", "eligibility", "price", "bid price", "boq"));
+
+        ObjectNode ctx = objectMapper.createObjectNode();
+        ObjectNode project = ctx.putObject("project");
+        project.put("name", "SIH26100 GeM Integrated Compliance and AI Risk Assessment System");
+        project.put("portal", "National Procurement Verification Portal");
+        project.put("description", "Procurement bid compliance and AI risk assessment platform with seeded demo bids.");
+
+        ArrayNode bidArr = ctx.putArray("bids");
+        ArrayNode riskArr = ctx.putArray("risk_summaries");
+        ArrayNode conflictArr = ctx.putArray("conflicts");
+
+        for (Bid b : bids) {
+            keywords.add(b.getBidId().toLowerCase());
+            if (b.getTenderId() != null) keywords.add(b.getTenderId().toLowerCase());
+            if (b.getBidderName() != null) keywords.add(b.getBidderName().toLowerCase());
+            if (b.getDepartment() != null) keywords.add(b.getDepartment().toLowerCase());
+            if (b.getCategory() != null) keywords.add(b.getCategory().toLowerCase());
+            if (b.getTenderTitle() != null) keywords.add(b.getTenderTitle().toLowerCase());
+
+            ObjectNode bn = bidArr.addObject();
+            bn.put("bid_id", b.getBidId());
+            bn.put("bidder_name", b.getBidderName());
+            bn.put("tender_id", b.getTenderId());
+            bn.put("tender_title", b.getTenderTitle());
+            bn.put("department", b.getDepartment());
+            bn.put("category", b.getCategory());
+            bn.put("status", b.getStatus());
+            bn.put("risk_level", b.getRiskLevel());
+            if (b.getCompliancePercentage() != null) bn.put("compliance_percentage", b.getCompliancePercentage());
+            ObjectNode counts = bn.putObject("requirement_counts");
+            counts.put("total", nvl(b.getTotalRequirements()));
+            counts.put("pass", nvl(b.getPassCount()));
+            counts.put("fail", nvl(b.getFailCount()));
+            counts.put("review", nvl(b.getReviewCount()));
+            counts.put("missing", nvl(b.getMissingCount()));
+            counts.put("conflict", nvl(b.getConflictCount()));
+            bn.put("document_count", documentRepository.findByBidIdOrderByUploadedAtDesc(b.getBidId()).size());
+
+            ArrayNode reqArr = bn.putArray("requirements");
+            for (Requirement r : requirementRepository.findByBidId(b.getBidId())) {
+                ObjectNode rn = reqArr.addObject();
+                rn.put("requirement_id", r.getRequirementId());
+                rn.put("description", r.getRequirement());
+                rn.put("category", r.getCategory());
+                rn.put("status", r.getStatus());
+                rn.put("risk", r.getRisk());
+                if (r.getDetectedValue() != null) rn.put("detected_value", r.getDetectedValue());
+                if (r.getConfidence() != null) rn.put("confidence", r.getConfidence());
+            }
+
+            for (RiskCategorySummary rk : riskRepository.findByBidId(b.getBidId())) {
+                ObjectNode rn = riskArr.addObject();
+                rn.put("bid_id", b.getBidId());
+                rn.put("category", rk.getCategory());
+                rn.put("risk_level", rk.getRiskLevel());
+                if (rk.getScore() != null) rn.put("score", rk.getScore());
+                if (rk.getSummary() != null) rn.put("summary", rk.getSummary());
+            }
+
+            for (ConflictItem ci : conflictRepository.findByBidId(b.getBidId())) {
+                ObjectNode cn = conflictArr.addObject();
+                cn.put("bid_id", b.getBidId());
+                cn.put("conflict_id", ci.getConflictId());
+                cn.put("title", ci.getTitle());
+                cn.put("requirement", ci.getRequirement());
+                cn.put("risk_level", ci.getRiskLevel());
+                cn.put("status", ci.getStatus());
+                if (ci.getExplanation() != null) cn.put("explanation", ci.getExplanation());
+            }
+        }
+
+        boolean matches = false;
+        for (String k : keywords) {
+            if (k != null && !k.isBlank() && q.contains(k)) { matches = true; break; }
+        }
+        return matches ? ctx : null;
+    }
+
+    private int nvl(Integer value) { return value == null ? 0 : value; }
 
     @Transactional(noRollbackFor = AiClientException.class)
     public JsonNode processSubmission(String bidId, String currentUser, boolean officer) {

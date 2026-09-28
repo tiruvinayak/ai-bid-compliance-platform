@@ -93,7 +93,7 @@ export const BidderSignup: React.FC = () => {
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 text-3xs font-bold uppercase tracking-[0.22em] text-blue-200">
             <span className="w-2 h-2 rounded-full bg-amber-400" />
-            SIH26100 Prototype
+            SIH26100
           </div>
           <div className="mt-10 space-y-2">
             <Landmark className="w-10 h-10 text-amber-400" />

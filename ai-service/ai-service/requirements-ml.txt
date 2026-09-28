@@ -1,0 +1,6 @@
+# Optional ML training dependencies (Phase 5B).
+# Not installed by default — the pipeline reports NOT TRAINED without a
+# validated dataset regardless. Install only when real training data exists:
+#   pip install -r requirements-ml.txt
+scikit-learn>=1.4.0
+numpy>=1.26.0

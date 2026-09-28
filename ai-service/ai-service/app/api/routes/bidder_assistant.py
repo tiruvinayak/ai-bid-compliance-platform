@@ -18,7 +18,7 @@ router = APIRouter()
 # Defines POST route decorator for /api/ai/bidder-assistant/chat endpoint.
 # Required to answer bidder questions using grounded tender/bid context.
 @router.post("/bidder-assistant/chat")
-async def bidder_assistant_chat(
+def bidder_assistant_chat(
     # Accepts request payload model holding question and optional chat history.
     # Required to receive natural language query parameters from HTTP API clients.
     payload: BidderAssistantRequest

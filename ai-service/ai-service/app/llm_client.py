@@ -251,7 +251,7 @@ class OllamaLLMProvider(BaseLLMProvider):
             "stream": False,
             "options": {
                 "temperature": 0.0,
-                "num_predict": 2048
+                "num_predict": 4096
             }
         }
 

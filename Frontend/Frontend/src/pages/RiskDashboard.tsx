@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '../components/layout/PageHeader';
 import { ExecutiveRiskSummary } from '../components/risk/ExecutiveRiskSummary';
+import { MlRiskPanel } from '../components/risk/MlRiskPanel';
 import { RiskCategoryCard } from '../components/risk/RiskCategoryCard';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
@@ -76,6 +77,8 @@ export const RiskDashboard: React.FC = () => {
         overallRisk={bid.riskLevel}
         factors={topFactors}
       />
+
+      <MlRiskPanel bidId={bid.id} ruleBasedRisk={bid.riskLevel} />
 
       {riskCategories.length === 0 ? (
         <div className="p-8 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-2">

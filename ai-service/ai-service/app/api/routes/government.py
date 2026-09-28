@@ -18,7 +18,7 @@ router = APIRouter()
 # Defines POST route decorator for /api/ai/government/ask endpoint.
 # Required to answer procurement questions using grounded Phase 6C + 6D guidance.
 @router.post("/government/ask")
-async def ask_government_knowledge(
+def ask_government_knowledge(
     # Accepts request payload model holding question string, top_k, and threshold.
     # Required to receive natural language query parameters from HTTP API clients.
     payload: GovernmentAskRequest
@@ -45,6 +45,9 @@ async def ask_government_knowledge(
         # Extracts similarity threshold parameter value from payload (defaults to 0.15 for Ollama embeddings).
         # Required to enforce grounding similarity threshold cutoff.
         threshold = payload.threshold if payload.threshold is not None else 0.15
+        # Extracts optional live project context (bids/compliance/risks) supplied by the backend.
+        # Required to ground answers about platform data in real database records.
+        project_context = payload.context if payload.context else None
 
         # Instantiates Phase 6D Grounded RAG service.
         # Required to execute semantic search retrieval and grounded answer generation.
@@ -54,7 +57,8 @@ async def ask_government_knowledge(
         response = rag_service.ask_government_knowledge(
             query=question.strip(),
             top_k=top_k,
-            min_similarity=threshold
+            min_similarity=threshold,
+            project_context=project_context
         )
 
         # Checks if RAG response status indicates an unrecoverable server execution error.

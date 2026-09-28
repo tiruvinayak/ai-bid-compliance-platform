@@ -82,6 +82,10 @@ class GovernmentAskRequest(BaseModel):
     # Required to enforce evidence grounding and trigger fallback refusal if similarity is low.
     threshold: Optional[float] = Field(default=0.15, ge=0.0, le=1.0, description="Minimum grounding similarity threshold")
 
+    # Optional live project context (bids, compliance, risks) supplied by Spring Boot.
+    # Used as first-class grounding evidence when the question concerns platform data.
+    context: Optional[Dict[str, Any]] = Field(default=None, description="Live project data context from the procurement platform database")
+
 
 # Defines standardized error response model for API failure cases.
 # Required to ensure clean, structured JSON error reporting without exposing secrets.

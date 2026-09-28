@@ -330,3 +330,173 @@ export interface AssistantChatResponse {
   grounding_status: 'GROUNDED' | 'INSUFFICIENT_EVIDENCE' | 'GENERATION_FAILED' | 'VALIDATION_ERROR';
   error_message?: string;
 }
+
+// ---- Phase 4: Multi-Bidder Comparison & Decision Support ----
+
+export interface PreliminaryComparison {
+  overallStatus: string;
+  total: number;
+  pass: number;
+  review: number;
+  fail: number;
+  missing: number;
+  conflict: number;
+}
+
+export interface ComplianceCounts {
+  total: number;
+  pass: number;
+  review: number;
+  fail: number;
+  missing: number;
+  conflict: number;
+  coveragePercent: number | null;
+}
+
+export interface RiskCounts {
+  high: number;
+  medium: number;
+  low: number;
+  total: number;
+}
+
+export interface ConflictSummary {
+  conflictId: string | null;
+  requirementId: string | null;
+  conflictType: string | null;
+  title: string | null;
+  status: string | null;
+  riskLevel: string | null;
+  sources: string[];
+}
+
+export interface BidderComparison {
+  bidId: string;
+  bidderName: string;
+  status: string | null;
+  preliminary: PreliminaryComparison;
+  compliance: ComplianceCounts;
+  risk: RiskCounts;
+  conflictCount: number;
+  conflicts: ConflictSummary[];
+  documentTypes: string[];
+}
+
+export interface RequirementCell {
+  bidId: string;
+  status: string | null;
+  expectedValue: string | null;
+  actualValue: string | null;
+  reason: string | null;
+  document: string | null;
+  page: number | null;
+  hasEvidence: boolean;
+  evidenceDocument: string | null;
+  evidencePage: number | null;
+  evidenceSnippet: string | null;
+}
+
+export interface RequirementMatrixRow {
+  requirementId: string;
+  description: string;
+  category: string | null;
+  requiredValue: string | null;
+  mandatory: boolean | null;
+  cells: RequirementCell[];
+}
+
+export interface DocumentCoverageCell {
+  bidId: string;
+  present: boolean;
+  count: number;
+}
+
+export interface DocumentCoverageRow {
+  category: string;
+  cells: DocumentCoverageCell[];
+}
+
+export interface BidComparison {
+  tenderId: string;
+  tenderTitle: string;
+  departmentName: string | null;
+  sectorName: string | null;
+  bidCount: number;
+  bidders: BidderComparison[];
+  requirements: RequirementMatrixRow[];
+  documentCoverage: DocumentCoverageRow[];
+}
+
+// ---- Phase 5A: External Government Verification ----
+
+export type VerificationProviderName = 'GST' | 'PAN' | 'MCA' | 'EPFO_ESIC' | 'DIGILOCKER';
+
+export type VerificationStatus =
+  | 'VERIFIED'
+  | 'NOT_VERIFIED'
+  | 'MISMATCH'
+  | 'UNAVAILABLE'
+  | 'SANDBOX'
+  | 'ERROR'
+  | 'PENDING';
+
+export interface GovernmentVerificationResult {
+  provider: string;
+  displayName: string;
+  status: VerificationStatus;
+  message: string | null;
+  referenceType: string | null;
+  referenceValue: string | null;
+  verifiedName: string | null;
+  verifiedStatus: string | null;
+  verifiedDate: string | null;
+  mismatchReason: string | null;
+  source: string | null;
+  checkedAt: string | null;
+  evidenceReference: string | null;
+}
+
+export interface GovernmentVerificationResponse {
+  bidId: string;
+  tenderId: string | null;
+  checkedAt: string | null;
+  results: GovernmentVerificationResult[];
+}
+
+// ---- Phase 5B: ML Risk Layer (decision support) ----
+
+export interface MlFeatureVector {
+  featureVersion: string;
+  requirementsPassed: number;
+  requirementsReview: number;
+  requirementsFailed: number;
+  requirementsMissing: number;
+  preliminaryFailCount: number;
+  preliminaryReviewCount: number;
+  expiredDocumentCount: number;
+  conflictCount: number;
+  riskFactorCount: number;
+  highRiskCount: number;
+  mediumRiskCount: number;
+  lowRiskCount: number;
+  documentCount: number;
+  evidenceCoverage: number;
+}
+
+export interface MlContributingFeature {
+  feature: string;
+  value: number;
+  contribution: number | null;
+}
+
+export interface MlRiskResponse {
+  bidId: string;
+  status: 'AVAILABLE' | 'NOT_AVAILABLE';
+  reason: string | null;
+  featureVersion: string;
+  features: MlFeatureVector;
+  modelVersion: string | null;
+  riskLevel: string | null;
+  prediction: number | null;
+  contributingFeatures: MlContributingFeature[];
+}

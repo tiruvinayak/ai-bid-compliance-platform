@@ -11,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,9 +43,13 @@ public class AiAssistantController {
 
         try {
             JsonNode response = assistantService.chat(bidId, request.question(),
-                    request.chat_history(), currentUser, officer);
+                    request.normalizedChatHistory(), currentUser, officer);
             return ResponseEntity.ok(response);
         } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            // Preserve 404 for missing bids (GlobalExceptionHandler renders the JSON body);
+            // without this rethrow the RuntimeException catch below would collapse it to 500.
             throw e;
         } catch (AiClientException e) {
             return ResponseEntity.badRequest().body(objectMapper.valueToTree(Map.of(
@@ -62,10 +68,31 @@ public class AiAssistantController {
 
     public record AssistantChatRequest(
             @NotBlank String question,
-            List<Map<String, String>> chat_history
+            List<Map<String, Object>> chat_history
     ) {
         public AssistantChatRequest {
             if (chat_history == null) chat_history = List.of();
+        }
+
+        /**
+         * Normalizes history entries to the string-only {role, content} contract expected
+         * by the AI service. Tolerates extra client fields such as citation arrays, which
+         * previously caused HTTP 400 (Jackson String-vs-Array) from the second turn onward.
+         */
+        public List<Map<String, String>> normalizedChatHistory() {
+            List<Map<String, String>> normalized = new ArrayList<>();
+            for (Map<String, Object> entry : chat_history) {
+                if (entry == null) continue;
+                Object role = entry.get("role");
+                Object content = entry.get("content");
+                if (!(role instanceof CharSequence roleValue) || !(content instanceof CharSequence contentValue)) continue;
+                if (roleValue.toString().isBlank() || contentValue.toString().isBlank()) continue;
+                Map<String, String> clean = new HashMap<>();
+                clean.put("role", roleValue.toString().trim());
+                clean.put("content", contentValue.toString());
+                normalized.add(clean);
+            }
+            return normalized;
         }
     }
 }

@@ -4,12 +4,13 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { ComplianceSummary } from '../components/compliance/ComplianceSummary';
 import { RequirementTable } from '../components/compliance/RequirementTable';
 import { PreliminaryVerification } from '../components/compliance/PreliminaryVerification';
+import { GovernmentVerification } from '../components/compliance/GovernmentVerification';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
 import { complianceService } from '../services/complianceService';
 import { bidService } from '../services/bidService';
 import type { Bid, Requirement, PreliminaryVerificationSummary, PreliminaryVerificationCheck } from '../types';
-import { ShieldAlert, UserCheck } from 'lucide-react';
+import { ShieldAlert, UserCheck, GitCompare } from 'lucide-react';
 
 export const ComplianceDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -83,6 +84,13 @@ export const ComplianceDashboard: React.FC = () => {
         actions={
           <div className="flex items-center gap-3">
             <button
+              onClick={() => navigate(`/bids/${id}/compare`)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <GitCompare className="w-4 h-4" />
+              <span>Compare Bids</span>
+            </button>
+            <button
               onClick={() => navigate(`/bids/${id}/risks`)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded text-xs font-bold transition shadow-xs cursor-pointer"
             >
@@ -106,6 +114,8 @@ export const ComplianceDashboard: React.FC = () => {
           checks={preliminaryChecks}
         />
       )}
+
+      <GovernmentVerification bidId={id} />
 
       <ComplianceSummary
         total={totalRequirements}
