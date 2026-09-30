@@ -1,0 +1,40 @@
+# ==============================================================================
+# SIH Bid Compliance Platform - Local Development Docker Compose Override
+#
+# PURPOSE: Runs application stack in Docker while connecting to native
+#          Ollama running directly on macOS (host.docker.internal:11434).
+#
+# USAGE:   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+# ==============================================================================
+
+services:
+  # Dummy no-op services for local environment so Compose dependencies resolve cleanly
+  ollama:
+    image: alpine:latest
+    entrypoint: ["true"]
+    healthcheck:
+      test: ["CMD-SHELL", "true"]
+
+  ollama-init:
+    image: alpine:latest
+    entrypoint: ["echo", "[local] Native macOS Ollama active on host.docker.internal:11434"]
+    depends_on: []
+
+  # Override AI Microservice to communicate with Mac host Ollama
+  ai-service:
+    environment:
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: qwen2.5:3b
+      EMBEDDING_PROVIDER: ollama
+      OLLAMA_EMBEDDING_MODEL: nomic-embed-text
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:-sih_bid_compliance}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME_SECURE_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully

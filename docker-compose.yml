@@ -1,0 +1,173 @@
+# ==============================================================================
+# SIH Bid Compliance Platform - Unified Docker Compose Architecture
+# ==============================================================================
+
+services:
+  # 1. PostgreSQL Database with pgvector extension support
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sih_bid_compliance}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME_SECURE_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sih_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sih_bid_compliance}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Local Ollama LLM Server
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - sih_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Ollama Model Initialization Service (Auto-pulls qwen2.5:3b and nomic-embed-text if missing)
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ollama-init
+    environment:
+      OLLAMA_HOST: ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+    networks:
+      - sih_network
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: >
+      sh -c '
+        echo "[ollama-init] Checking Ollama server at ollama:11434..."
+        until ollama list >/dev/null 2>&1; do sleep 2; done
+        echo "[ollama-init] Ollama server is responsive."
+        if ollama list | grep -q "${OLLAMA_MODEL:-qwen2.5:3b}"; then
+          echo "[ollama-init] Model ${OLLAMA_MODEL:-qwen2.5:3b} is already present."
+        else
+          echo "[ollama-init] Model ${OLLAMA_MODEL:-qwen2.5:3b} not found. Pulling model..."
+          ollama pull ${OLLAMA_MODEL:-qwen2.5:3b}
+          echo "[ollama-init] Model ${OLLAMA_MODEL:-qwen2.5:3b} pulled successfully!"
+        fi
+        if ollama list | grep -q "${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}"; then
+          echo "[ollama-init] Embedding model ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text} is already present."
+        else
+          echo "[ollama-init] Embedding model ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text} not found. Pulling model..."
+          ollama pull ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+          echo "[ollama-init] Embedding model ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text} pulled successfully!"
+        fi
+        echo "[ollama-init] Ollama initialization complete."
+      '
+
+  # 4. Python FastAPI AI Microservice
+  ai-service:
+    build:
+      context: ./ai-service/ai-service
+      dockerfile: Dockerfile
+    container_name: ai-service
+    environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-ollama}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:-sih_bid_compliance}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME_SECURE_PASSWORD}
+    networks:
+      - sih_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/ai/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 5. Spring Boot Java Backend Server
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: backend
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-postgres}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/sih_bid_compliance}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-CHANGE_ME_SECURE_PASSWORD}
+      AI_SERVICE_BASE_URL: ${AI_SERVICE_BASE_URL:-http://ai-service:8000}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-CHANGE_ME_JWT_SECRET_USE_A_LONG_RANDOM_STRING}
+      UPLOAD_DIR: /app/uploads
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://127.0.0.1}
+    volumes:
+      - ./Backend/uploads:/app/uploads
+    networks:
+      - sih_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/ai/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # 6. React Frontend SPA Application
+  frontend:
+    build:
+      context: ./Frontend/Frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    networks:
+      - sih_network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # 7. Root NGINX Reverse Proxy (Public Entry Point)
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - sih_network
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  sih_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  ollama_data:

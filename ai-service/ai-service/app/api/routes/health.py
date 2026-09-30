@@ -2,6 +2,10 @@
 # Required to declare modular route definitions for health check endpoints.
 from fastapi import APIRouter
 
+# Imports os module for environment variable access.
+# Required to read OLLAMA_BASE_URL/OLLAMA_MODEL configured per deployment target.
+import os
+
 # Imports HealthResponse schema for response typing.
 # Required to enforce structured JSON output for the health endpoint.
 from app.api.schemas.api_schemas import HealthResponse
@@ -21,12 +25,13 @@ router = APIRouter()
 async def check_health():
     # Checks Ollama connectivity and model availability.
     # Required to confirm local LLM gateway is reachable for AI processing.
-    ollama_status = {"connected": False, "model_available": False, "model": "unknown", "base_url": "http://localhost:11434"}
+    ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+    ollama_model = os.environ.get("OLLAMA_MODEL", "qwen2.5:3b")
+    ollama_status = {"connected": False, "model_available": False, "model": ollama_model, "base_url": ollama_base_url}
     try:
-        provider = OllamaLLMProvider(model="qwen2.5:3b", base_url="http://localhost:11434")
+        provider = OllamaLLMProvider(model=ollama_model, base_url=ollama_base_url)
         ollama_status["connected"] = True
         ollama_status["model_available"] = provider.health_check()
-        ollama_status["model"] = "qwen2.5:3b"
     except Exception as e:
         ollama_status["error"] = str(e)
 
