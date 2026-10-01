@@ -1,3 +1,5 @@
+import os
+
 # Imports APIRouter from FastAPI framework.
 # Required to declare modular route definitions for health check endpoints.
 from fastapi import APIRouter
