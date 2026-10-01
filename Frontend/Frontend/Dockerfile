@@ -2,35 +2,80 @@
 # Multi-stage Dockerfile for React Frontend SPA (Vite + TypeScript)
 # ==============================================================================
 
+# ==============================================================================
 # Stage 1: Build stage
+# ==============================================================================
+
 FROM node:20-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
-# Copy package descriptors and install dependencies
+# ------------------------------------------------------------------------------
+# Install dependencies
+# ------------------------------------------------------------------------------
+
+# Copy package files first for better Docker layer caching
 COPY package*.json ./
+
+# Install Node dependencies
 RUN npm ci || npm install
 
-# Copy frontend source files
+# ------------------------------------------------------------------------------
+# Copy frontend source
+# ------------------------------------------------------------------------------
+
 COPY . .
 
-# Set default relative API base URL for NGINX proxying
-# Receive API URL from Render environment variable at build time
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+# ------------------------------------------------------------------------------
+# Render API configuration
+# ------------------------------------------------------------------------------
 
-# Build React production static assets
+# Vite environment variables must be available during the build.
+# Render provides VITE_API_BASE_URL as a build-time environment variable.
+ARG VITE_API_BASE_URL
+
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
+# Show the API URL during build so it can be verified in Render logs
+RUN echo "=============================================="
+RUN echo "Building frontend..."
+RUN echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}"
+RUN echo "=============================================="
+
+# ------------------------------------------------------------------------------
+# Build React application
+# ------------------------------------------------------------------------------
+
 RUN npm run build
 
-# Stage 2: NGINX production stage
+
+# ==============================================================================
+# Stage 2: NGINX production server
+# ==============================================================================
+
 FROM nginx:alpine
 
-# Copy built production assets from builder stage
+# ------------------------------------------------------------------------------
+# Copy React production build
+# ------------------------------------------------------------------------------
+
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom NGINX configuration for SPA routing fallback
+# ------------------------------------------------------------------------------
+# SPA NGINX configuration
+# ------------------------------------------------------------------------------
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# ------------------------------------------------------------------------------
+# Expose HTTP port
+# ------------------------------------------------------------------------------
+
 EXPOSE 80
+
+# ------------------------------------------------------------------------------
+# Start NGINX
+# ------------------------------------------------------------------------------
 
 CMD ["nginx", "-g", "daemon off;"]
