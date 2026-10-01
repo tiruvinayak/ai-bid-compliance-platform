@@ -15,7 +15,9 @@ RUN npm ci || npm install
 COPY . .
 
 # Set default relative API base URL for NGINX proxying
-ENV VITE_API_BASE_URL=/api
+# Receive API URL from Render environment variable at build time
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Build React production static assets
 RUN npm run build
