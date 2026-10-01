@@ -17,20 +17,18 @@ export const Login: React.FC = () => {
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
     setError('');
-    if (USE_MOCK) {
-      if (role === 'USER') {
-        setUsername('user@demo.gov.in');
-        setPassword('User@123');
-      } else if (role === 'CENTRAL_ADMIN') {
-        setUsername('admin@demo.gov.in');
-        setPassword('Admin@123');
-      } else if (role === 'SECTOR_USER') {
-        setUsername('railways@demo.gov.in');
-        setPassword('Sector@123');
-      } else {
-        setUsername('officer@demo.gov.in');
-        setPassword('Officer@123');
-      }
+    if (role === 'USER') {
+      setUsername('user@demo.gov.in');
+      setPassword('User@123');
+    } else if (role === 'CENTRAL_ADMIN') {
+      setUsername('admin@demo.gov.in');
+      setPassword('Admin@123');
+    } else if (role === 'SECTOR_USER') {
+      setUsername('railways@demo.gov.in');
+      setPassword('Sector@123');
+    } else {
+      setUsername('officer@demo.gov.in');
+      setPassword('Officer@123');
     }
   };
 
@@ -111,9 +109,8 @@ export const Login: React.FC = () => {
             </div>
           </div>
 
-          {USE_MOCK && (
-            <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-3xs text-slate-600">
-              <div className="font-bold text-slate-800 uppercase tracking-wider mb-3">Development Demo Access</div>
+          <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-3xs text-slate-600">
+              <div className="font-bold text-slate-800 uppercase tracking-wider mb-3">SIH Demo Accounts (fixed credentials)</div>
               <div className="grid grid-cols-2 gap-2 font-mono">
                 <button
                   type="button"
@@ -173,7 +170,6 @@ export const Login: React.FC = () => {
                 </button>
               </div>
             </div>
-          )}
 
           {error && (
             <div role="alert" className="mb-6 flex gap-3 p-4 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-800">

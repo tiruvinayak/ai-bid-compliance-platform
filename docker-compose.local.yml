@@ -1,40 +1,47 @@
 # ==============================================================================
-# SIH Bid Compliance Platform - Local Development Docker Compose Override
+# SIH2 LOCAL OVERRIDE — native macOS services
 #
-# PURPOSE: Runs application stack in Docker while connecting to native
-#          Ollama running directly on macOS (host.docker.internal:11434).
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
 #
-# USAGE:   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+# - PostgreSQL runs NATIVELY on macOS (host.docker.internal:5432)
+# - Ollama runs NATIVELY on macOS (host.docker.internal:11434)
+# - Docker-embedded postgres / ollama / ollama-init are excluded (profiles)
+# - All secrets come from .env (git-ignored) — never hard-code them here
+# - Production docker-compose.yml is unchanged
 # ==============================================================================
 
 services:
-  # Dummy no-op services for local environment so Compose dependencies resolve cleanly
+
+  # ---- Exclude Docker-embedded DB & Ollama (native services are used) ----
+  postgres:
+    profiles: ["docker-only"]
   ollama:
-    image: alpine:latest
-    entrypoint: ["true"]
-    healthcheck:
-      test: ["CMD-SHELL", "true"]
-
+    profiles: ["docker-only"]
   ollama-init:
-    image: alpine:latest
-    entrypoint: ["echo", "[local] Native macOS Ollama active on host.docker.internal:11434"]
-    depends_on: []
+    profiles: ["docker-only"]
 
-  # Override AI Microservice to communicate with Mac host Ollama
+  # ---- FastAPI AI service → native Ollama + native PostgreSQL ----
   ai-service:
+    depends_on: !reset []
     environment:
       LLM_PROVIDER: ollama
       OLLAMA_BASE_URL: http://host.docker.internal:11434
       OLLAMA_MODEL: qwen2.5:3b
       EMBEDDING_PROVIDER: ollama
       OLLAMA_EMBEDDING_MODEL: nomic-embed-text
-      DB_HOST: postgres
+      DB_HOST: host.docker.internal
       DB_PORT: "5432"
-      DB_NAME: ${POSTGRES_DB:-sih_bid_compliance}
-      DB_USER: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME_SECURE_PASSWORD}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      ollama-init:
-        condition: service_completed_successfully
+      DB_NAME: sih_bid_compliance
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+
+  # ---- Spring Boot backend → native PostgreSQL + FastAPI ----
+  backend:
+    depends_on: !reset []
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/sih_bid_compliance
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      AI_SERVICE_BASE_URL: http://ai-service:8000
