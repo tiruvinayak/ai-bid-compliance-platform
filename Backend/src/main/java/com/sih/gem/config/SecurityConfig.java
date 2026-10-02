@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/register/bidder").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/ai/health").permitAll()
                 // Government instructions & helpdesk FAQs are public read
                 .requestMatchers(HttpMethod.GET, "/api/government-instructions/**").permitAll()

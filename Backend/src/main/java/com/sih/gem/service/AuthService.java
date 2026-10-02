@@ -12,8 +12,13 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -35,9 +40,14 @@ public class AuthService {
         if (email.isBlank()) {
             throw new RuntimeException("Email or Username is required");
         }
-
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, request.password()));
+        log.info("Authentication request received for user '{}'", email);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, request.password()));
+        } catch (RuntimeException ex) {
+            log.warn("Authentication failed for user '{}': {}", email, ex.getClass().getSimpleName());
+            throw ex;
+        }
 
         User user = userRepository.findByEmail(email)
                 .or(() -> userRepository.findByEmail(email.toLowerCase()))
@@ -47,6 +57,7 @@ public class AuthService {
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        log.info("Authentication succeeded for user '{}' with role {}", email, user.getRole());
         return new AuthResponse(token, toDto(user));
     }
 

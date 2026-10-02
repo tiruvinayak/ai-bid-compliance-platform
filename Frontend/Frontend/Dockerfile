@@ -37,10 +37,17 @@ ARG VITE_API_BASE_URL
 
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
+# API request timeout must cover Render free-tier cold starts (~60s).
+# Default when not provided: 180000 ms.
+ARG VITE_API_TIMEOUT_MS=180000
+
+ENV VITE_API_TIMEOUT_MS=${VITE_API_TIMEOUT_MS}
+
 # Show the API URL during build so it can be verified in Render logs
 RUN echo "=============================================="
 RUN echo "Building frontend..."
 RUN echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}"
+RUN echo "VITE_API_TIMEOUT_MS=${VITE_API_TIMEOUT_MS}"
 RUN echo "=============================================="
 
 # ------------------------------------------------------------------------------
